@@ -129,6 +129,5 @@ dmypy.json
 .pyre/
 
 # NOLA Opendrift+FVCOM stuff
-coast/
 dep_env/
 dep_env.yml

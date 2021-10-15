@@ -19,8 +19,6 @@ from opendrift.models.oceandrift import OceanDrift
 
 o = OceanDrift(loglevel=20)
 
-#TESTING
-
 #Readers
 reader_coast = reader_shape.Reader.from_shpfiles('coast/po10_coast.shp')
 o.add_reader(reader_coast) # Add coastline identical to the FVCOM grid
@@ -30,7 +28,7 @@ o.add_reader(reader_coast) # Add coastline identical to the FVCOM grid
 
 proj = "+proj=utm +zone=33W, +north +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
 
-fl = Filelist('fileList.txt', start_time='2018-3-1-0', stop_time='2018-3-14-0') # List of path to forcing
+fl = Filelist('fileList.txt', start_time='2018-3-1-0', stop_time='2018-3-3-0') # List of path to forcing
 unique_files = fl.unique_files()
 
 for f in unique_files:
@@ -45,7 +43,7 @@ o.set_config('general:use_auto_landmask',False) # Override default landmask
 o.set_config('general:coastline_action', 'previous') # Jump back to previous position when meeting coast
 
 
-N = 15 # Number of particles
+N = 2 # Number of particles
 #z = -10 * np.random.uniform(0, 1, N)
 z = -5 # Particle depth
 #Måselvsutløpet
@@ -71,10 +69,10 @@ for t in start_times:
 
 
 # Running model
-o.run(time_step=3600, duration=timedelta(days=2), time_step_output=3600*12, outfile='/work/kvile/results/nola-sis/test1.nc', export_variables=['time', 'lon', 'lat', 'z'], export_buffer_length=4)
+o.run(time_step=3600, duration=timedelta(days=3), time_step_output=3600*12, outfile='/work/kvile/results/nola-sis/test1.nc', export_variables=['time', 'lon', 'lat', 'z'], export_buffer_length=4)
 
 # Show output
 o.plot()
 #o.plot_property('z')
-o.plot_property('z', mean=True)
+#o.plot_property('z', mean=True)
 #o.animation
