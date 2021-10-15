@@ -16,6 +16,7 @@ from opendrift.readers import reader_netCDF_CF_unstructured # FVCOM reader
 from opendrift.readers import reader_shape
 from opendrift.models.oceandrift import OceanDrift
 
+#TEST
 
 reader_coast = reader_shape.Reader.from_shpfiles('coast/po10_coast.shp')
 o = OceanDrift(loglevel=20)
