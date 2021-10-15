@@ -19,6 +19,8 @@ from opendrift.models.oceandrift import OceanDrift
 
 o = OceanDrift(loglevel=20)
 
+#TESTING
+
 #Readers
 reader_coast = reader_shape.Reader.from_shpfiles('coast/po10_coast.shp')
 o.add_reader(reader_coast) # Add coastline identical to the FVCOM grid
