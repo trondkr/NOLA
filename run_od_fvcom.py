@@ -73,6 +73,7 @@ o.run(time_step=3600, duration=timedelta(days=3), time_step_output=3600*12, outf
 
 # Show output
 o.plot()
+o.plot(fast=True, color='origin_marker', legend=['Målselv','Aursfjord','Nordfjord'],colorbar=True) # NOT WORKING
 #o.plot_property('z')
 #o.plot_property('z', mean=True)
 #o.animation
