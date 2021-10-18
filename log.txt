@@ -1,0 +1,105 @@
+14:46:03 INFO    opendrift.models.basemodel: OpenDriftSimulation initialised (version 1.7.1 / v1.7.1-89-g3dfb66c-dirty)
+14:46:03 INFO    opendrift.readers.reader_shape: Pre-processing 190 geometries
+14:46:04 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Opening dataset: /data/MATNOC/PO10/output05/PO10_0013.nc
+14:46:04 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Opening file with Dataset
+14:46:04 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Using custom projection: +proj=utm +zone=33W, +north +ellps=WGS84 +datum=WGS84 +units=m +no_defs..
+14:46:04 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Reading grid and coordinate variables..
+14:46:07 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Opening dataset: /data/MATNOC/PO10/output05/PO10_0014.nc
+14:46:07 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Opening file with Dataset
+14:46:07 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Using custom projection: +proj=utm +zone=33W, +north +ellps=WGS84 +datum=WGS84 +units=m +no_defs..
+14:46:07 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Reading grid and coordinate variables..
+14:46:09 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Opening dataset: /data/MATNOC/PO10/output05/PO10_0015.nc
+14:46:09 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Opening file with Dataset
+14:46:09 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Using custom projection: +proj=utm +zone=33W, +north +ellps=WGS84 +datum=WGS84 +units=m +no_defs..
+14:46:09 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Reading grid and coordinate variables..
+14:46:14 INFO    opendrift.models.basemodel: Fallback values will be used for the following variables which have no readers: 
+14:46:14 INFO    opendrift.models.basemodel: 	x_wind: 0.000000
+14:46:14 INFO    opendrift.models.basemodel: 	y_wind: 0.000000
+14:46:14 INFO    opendrift.models.basemodel: 	ocean_vertical_diffusivity: 0.000000
+14:46:14 INFO    opendrift.models.basemodel: 	sea_surface_wave_significant_height: 0.000000
+14:46:14 INFO    opendrift.models.basemodel: 	sea_surface_wave_stokes_drift_x_velocity: 0.000000
+14:46:14 INFO    opendrift.models.basemodel: 	sea_surface_wave_stokes_drift_y_velocity: 0.000000
+14:46:14 INFO    opendrift.models.basemodel: 	sea_surface_wave_period_at_variance_spectral_density_maximum: 0.000000
+14:46:14 INFO    opendrift.models.basemodel: 	sea_surface_wave_mean_period_from_variance_spectral_density_second_frequency_moment: 0.000000
+14:46:14 INFO    opendrift.models.basemodel: 	surface_downward_x_stress: 0.000000
+14:46:14 INFO    opendrift.models.basemodel: 	surface_downward_y_stress: 0.000000
+14:46:14 INFO    opendrift.models.basemodel: 	turbulent_kinetic_energy: 0.000000
+14:46:14 INFO    opendrift.models.basemodel: 	turbulent_generic_length_scale: 0.000000
+14:46:14 INFO    opendrift.models.basemodel: 	ocean_mixed_layer_thickness: 50.000000
+14:46:14 INFO    opendrift.models.basemodel: Using existing reader for land_binary_mask
+14:46:14 INFO    opendrift.models.basemodel: All points are in ocean
+14:46:15 INFO    opendrift.models.basemodel: 2018-03-01 00:00:00 - step 1 of 72 - 6 active elements (0 deactivated)
+14:46:19 INFO    opendrift.models.basemodel: 2018-03-01 01:00:00 - step 2 of 72 - 6 active elements (0 deactivated)
+14:46:20 INFO    opendrift.models.basemodel: 2018-03-01 02:00:00 - step 3 of 72 - 6 active elements (0 deactivated)
+14:46:21 INFO    opendrift.models.basemodel: 2018-03-01 03:00:00 - step 4 of 72 - 6 active elements (0 deactivated)
+14:46:25 INFO    opendrift.models.basemodel: 2018-03-01 04:00:00 - step 5 of 72 - 6 active elements (0 deactivated)
+14:46:28 INFO    opendrift.models.basemodel: 2018-03-01 05:00:00 - step 6 of 72 - 6 active elements (0 deactivated)
+14:46:32 INFO    opendrift.models.basemodel: 2018-03-01 06:00:00 - step 7 of 72 - 6 active elements (0 deactivated)
+14:46:35 INFO    opendrift.models.basemodel: 2018-03-01 07:00:00 - step 8 of 72 - 6 active elements (0 deactivated)
+14:46:39 INFO    opendrift.models.basemodel: 2018-03-01 08:00:00 - step 9 of 72 - 6 active elements (0 deactivated)
+14:46:43 INFO    opendrift.models.basemodel: 2018-03-01 09:00:00 - step 10 of 72 - 6 active elements (0 deactivated)
+14:46:47 INFO    opendrift.models.basemodel: 2018-03-01 10:00:00 - step 11 of 72 - 6 active elements (0 deactivated)
+14:46:51 INFO    opendrift.models.basemodel: 2018-03-01 11:00:00 - step 12 of 72 - 6 active elements (0 deactivated)
+14:46:51 INFO    opendrift.models.basemodel: 2018-03-01 12:00:00 - step 13 of 72 - 6 active elements (0 deactivated)
+14:47:00 INFO    opendrift.models.basemodel: 2018-03-01 13:00:00 - step 14 of 72 - 6 active elements (0 deactivated)
+14:47:04 INFO    opendrift.models.basemodel: 2018-03-01 14:00:00 - step 15 of 72 - 6 active elements (0 deactivated)
+14:47:06 INFO    opendrift.models.basemodel: 2018-03-01 15:00:00 - step 16 of 72 - 6 active elements (0 deactivated)
+14:47:10 INFO    opendrift.models.basemodel: 2018-03-01 16:00:00 - step 17 of 72 - 6 active elements (0 deactivated)
+14:47:12 INFO    opendrift.models.basemodel: 2018-03-01 17:00:00 - step 18 of 72 - 6 active elements (0 deactivated)
+14:47:15 INFO    opendrift.models.basemodel: 2018-03-01 18:00:00 - step 19 of 72 - 6 active elements (0 deactivated)
+14:47:18 INFO    opendrift.models.basemodel: 2018-03-01 19:00:00 - step 20 of 72 - 6 active elements (0 deactivated)
+14:47:21 INFO    opendrift.models.basemodel: 2018-03-01 20:00:00 - step 21 of 72 - 6 active elements (0 deactivated)
+14:47:24 INFO    opendrift.models.basemodel: 2018-03-01 21:00:00 - step 22 of 72 - 6 active elements (0 deactivated)
+14:47:27 INFO    opendrift.models.basemodel: 2018-03-01 22:00:00 - step 23 of 72 - 6 active elements (0 deactivated)
+14:47:31 INFO    opendrift.models.basemodel: 2018-03-01 23:00:00 - step 24 of 72 - 6 active elements (0 deactivated)
+14:47:35 INFO    opendrift.models.basemodel: 2018-03-02 00:00:00 - step 25 of 72 - 12 active elements (0 deactivated)
+14:47:39 INFO    opendrift.models.basemodel: 2018-03-02 01:00:00 - step 26 of 72 - 12 active elements (0 deactivated)
+14:47:42 INFO    opendrift.models.basemodel: 2018-03-02 02:00:00 - step 27 of 72 - 12 active elements (0 deactivated)
+14:47:44 INFO    opendrift.models.basemodel: 2018-03-02 03:00:00 - step 28 of 72 - 12 active elements (0 deactivated)
+14:47:48 INFO    opendrift.models.basemodel: 2018-03-02 04:00:00 - step 29 of 72 - 12 active elements (0 deactivated)
+14:47:49 INFO    opendrift.models.basemodel: 2018-03-02 05:00:00 - step 30 of 72 - 12 active elements (0 deactivated)
+14:47:49 INFO    opendrift.models.basemodel: 2018-03-02 06:00:00 - step 31 of 72 - 12 active elements (0 deactivated)
+14:47:51 INFO    opendrift.models.basemodel: 2018-03-02 07:00:00 - step 32 of 72 - 12 active elements (0 deactivated)
+14:47:54 INFO    opendrift.models.basemodel: 2018-03-02 08:00:00 - step 33 of 72 - 12 active elements (0 deactivated)
+14:47:56 INFO    opendrift.models.basemodel: 2018-03-02 09:00:00 - step 34 of 72 - 12 active elements (0 deactivated)
+14:48:00 INFO    opendrift.models.basemodel: 2018-03-02 10:00:00 - step 35 of 72 - 12 active elements (0 deactivated)
+14:48:04 INFO    opendrift.models.basemodel: 2018-03-02 11:00:00 - step 36 of 72 - 12 active elements (0 deactivated)
+14:48:05 INFO    opendrift.models.basemodel: 2018-03-02 12:00:00 - step 37 of 72 - 12 active elements (0 deactivated)
+14:48:11 INFO    opendrift.export.io_netcdf: Wrote 4 steps to file /work/kvile/results/nola-sis/test1.nc
+14:48:11 INFO    opendrift.models.basemodel: 2018-03-02 13:00:00 - step 38 of 72 - 12 active elements (0 deactivated)
+14:48:14 INFO    opendrift.models.basemodel: 2018-03-02 14:00:00 - step 39 of 72 - 12 active elements (0 deactivated)
+14:48:17 INFO    opendrift.models.basemodel: 2018-03-02 15:00:00 - step 40 of 72 - 12 active elements (0 deactivated)
+14:48:21 INFO    opendrift.models.basemodel: 2018-03-02 16:00:00 - step 41 of 72 - 12 active elements (0 deactivated)
+14:48:23 INFO    opendrift.models.basemodel: 2018-03-02 17:00:00 - step 42 of 72 - 12 active elements (0 deactivated)
+14:48:26 INFO    opendrift.models.basemodel: 2018-03-02 18:00:00 - step 43 of 72 - 12 active elements (0 deactivated)
+14:48:29 INFO    opendrift.models.basemodel: 2018-03-02 19:00:00 - step 44 of 72 - 12 active elements (0 deactivated)
+14:48:32 INFO    opendrift.models.basemodel: 2018-03-02 20:00:00 - step 45 of 72 - 12 active elements (0 deactivated)
+14:48:36 INFO    opendrift.models.basemodel: 2018-03-02 21:00:00 - step 46 of 72 - 12 active elements (0 deactivated)
+14:48:40 INFO    opendrift.models.basemodel: 2018-03-02 22:00:00 - step 47 of 72 - 12 active elements (0 deactivated)
+14:48:44 INFO    opendrift.models.basemodel: 2018-03-02 23:00:00 - step 48 of 72 - 12 active elements (0 deactivated)
+14:48:48 INFO    opendrift.models.basemodel: 2018-03-03 00:00:00 - step 49 of 72 - 12 active elements (0 deactivated)
+14:48:52 INFO    opendrift.models.basemodel: 2018-03-03 01:00:00 - step 50 of 72 - 12 active elements (0 deactivated)
+14:48:56 INFO    opendrift.models.basemodel: 2018-03-03 02:00:00 - step 51 of 72 - 12 active elements (0 deactivated)
+14:48:59 INFO    opendrift.models.basemodel: 2018-03-03 03:00:00 - step 52 of 72 - 12 active elements (0 deactivated)
+14:49:01 INFO    opendrift.models.basemodel: 2018-03-03 04:00:00 - step 53 of 72 - 12 active elements (0 deactivated)
+14:49:04 INFO    opendrift.models.basemodel: 2018-03-03 05:00:00 - step 54 of 72 - 12 active elements (0 deactivated)
+14:49:07 INFO    opendrift.models.basemodel: 2018-03-03 06:00:00 - step 55 of 72 - 12 active elements (0 deactivated)
+14:49:10 INFO    opendrift.models.basemodel: 2018-03-03 07:00:00 - step 56 of 72 - 12 active elements (0 deactivated)
+14:49:14 INFO    opendrift.models.basemodel: 2018-03-03 08:00:00 - step 57 of 72 - 12 active elements (0 deactivated)
+14:49:17 INFO    opendrift.models.basemodel: 2018-03-03 09:00:00 - step 58 of 72 - 12 active elements (0 deactivated)
+14:49:21 INFO    opendrift.models.basemodel: 2018-03-03 10:00:00 - step 59 of 72 - 12 active elements (0 deactivated)
+14:49:25 INFO    opendrift.models.basemodel: 2018-03-03 11:00:00 - step 60 of 72 - 12 active elements (0 deactivated)
+14:49:25 INFO    opendrift.models.basemodel: 2018-03-03 12:00:00 - step 61 of 72 - 12 active elements (0 deactivated)
+14:49:25 INFO    opendrift.models.basemodel: 2018-03-03 13:00:00 - step 62 of 72 - 12 active elements (0 deactivated)
+14:49:25 INFO    opendrift.models.basemodel: 2018-03-03 14:00:00 - step 63 of 72 - 12 active elements (0 deactivated)
+14:49:25 INFO    opendrift.models.basemodel: 2018-03-03 15:00:00 - step 64 of 72 - 12 active elements (0 deactivated)
+14:49:25 INFO    opendrift.models.basemodel: 2018-03-03 16:00:00 - step 65 of 72 - 12 active elements (0 deactivated)
+14:49:25 INFO    opendrift.models.basemodel: 2018-03-03 17:00:00 - step 66 of 72 - 12 active elements (0 deactivated)
+14:49:25 INFO    opendrift.models.basemodel: 2018-03-03 18:00:00 - step 67 of 72 - 12 active elements (0 deactivated)
+14:49:25 INFO    opendrift.models.basemodel: 2018-03-03 19:00:00 - step 68 of 72 - 12 active elements (0 deactivated)
+14:49:25 INFO    opendrift.models.basemodel: 2018-03-03 20:00:00 - step 69 of 72 - 12 active elements (0 deactivated)
+14:49:25 INFO    opendrift.models.basemodel: 2018-03-03 21:00:00 - step 70 of 72 - 12 active elements (0 deactivated)
+14:49:25 INFO    opendrift.models.basemodel: 2018-03-03 22:00:00 - step 71 of 72 - 12 active elements (0 deactivated)
+14:49:25 INFO    opendrift.models.basemodel: 2018-03-03 23:00:00 - step 72 of 72 - 12 active elements (0 deactivated)
+14:49:25 INFO    opendrift.export.io_netcdf: Wrote 3 steps to file /work/kvile/results/nola-sis/test1.nc
+14:49:25 WARNING opendrift.models.basemodel: Plotting fast. This will make your plots less accurate.

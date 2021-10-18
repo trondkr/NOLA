@@ -17,7 +17,7 @@ from opendrift.readers import reader_netCDF_CF_unstructured # FVCOM reader
 from opendrift.readers import reader_shape
 from opendrift.models.oceandrift import OceanDrift
 
-o = OceanDrift(loglevel=20)
+o = OceanDrift(loglevel=20,logfile='log.txt')
 
 #Readers
 reader_coast = reader_shape.Reader.from_shpfiles('coast/po10_coast.shp')
@@ -72,8 +72,7 @@ for t in start_times:
 o.run(time_step=3600, duration=timedelta(days=3), time_step_output=3600*12, outfile='/work/kvile/results/nola-sis/test1.nc', export_variables=['time', 'lon', 'lat', 'z'], export_buffer_length=4)
 
 # Show output
-o.plot()
-o.plot(fast=True, color='origin_marker', legend=['Målselv','Aursfjord','Nordfjord'],colorbar=True) # NOT WORKING
+o.plot(fast=True, linecolor='origin_marker', legend=['Målselv','Aursfjord','Nordfjord'],colorbar=True)
 #o.plot_property('z')
 #o.plot_property('z', mean=True)
 #o.animation
