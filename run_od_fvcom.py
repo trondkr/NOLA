@@ -17,7 +17,8 @@ from opendrift.readers import reader_netCDF_CF_unstructured # FVCOM reader
 from opendrift.readers import reader_shape
 from opendrift.models.oceandrift import OceanDrift
 
-o = OceanDrift(loglevel=0,logfile='log.txt')
+outfile = 'nolaDrift.nc'
+o = OceanDrift(loglevel=20,logfile='log.txt')
 
 #Readers
 reader_coast = reader_shape.Reader.from_shpfiles('coast/po10_coast.shp')
@@ -28,7 +29,7 @@ o.add_reader(reader_coast) # Add coastline identical to the FVCOM grid
 
 proj = "+proj=utm +zone=33W, +north +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
 
-fl = Filelist('fileList.txt', start_time='2018-3-1-0', stop_time='2018-3-3-0') # List of path to forcing
+fl = Filelist('fileList.txt', start_time='2018-4-1-0', stop_time='2018-4-7-0') # List of path to forcing
 unique_files = fl.unique_files()
 
 for f in unique_files:
@@ -47,20 +48,20 @@ N = 2 # Number of particles
 #z = -10 * np.random.uniform(0, 1, N)
 z = -5 # Particle depth
 #Måselvsutløpet
-lon1 = 18.521
-lat2 = [69.308, 69.261, 69.289]
+#lon1 = [18.521, 18.696, 18.998]
+#lat2 = [69.308, 69.261, 69.289]
 #Aursfjordbotn
-lon1 = [18.521, 18.696, 18.998]
-lat2 = [69.308, 69.261, 69.289]
+#lon1 = [18.521, 18.696, 18.998]
+#lat2 = [69.308, 69.261, 69.289]
 #Nordfjordbotn
-lon1 = [18.521, 18.696, 18.998]
-lat2 = [69.308, 69.261, 69.289]
+#lon1 = [18.521, 18.696, 18.998]
+#lat2 = [69.308, 69.261, 69.289]
 
 
 #utm33 = Proj(proj)
 #x1, y1 = utm33(lon1, lat1)
 
-start_times = [datetime(2018, 3, 1, 0), datetime(2018, 3, 2, 0)] # Seed at specific times
+start_times = [datetime(2018, 4, 1, 0), datetime(2018, 4, 2, 0)] # Seed at specific times
 #start_times = [fl.datetime[0] + timedelta(hours=n) for n in range(0, 24*4, 6)] # Seed at multiple times
 for t in start_times:
     o.seed_elements(lon=18.507, lat=69.245, z=z, time=t, number=N, radius=20, origin_marker=0) #Målselv
@@ -69,10 +70,10 @@ for t in start_times:
 
 
 # Running model
-o.run(time_step=3600, duration=timedelta(days=2), time_step_output=3600*12, outfile='/work/kvile/results/nola-sis/test1.nc', export_variables=['time', 'lon', 'lat', 'z'], export_buffer_length=4)
+o.run(time_step=3600, duration=timedelta(days=2), time_step_output=3600*2, outfile=outfile, export_variables=['time', 'lon', 'lat', 'z','origin_marker'], export_buffer_length=4)
 
 # Show output
-o.plot(fast=True, linecolor='origin_marker', legend=['Målselv','Aursfjord','Nordfjord'],colorbar=True)
+o.plot(fast=True, linecolor='origin_marker', legend=['Målselv','Aursfjord','Nordfjord'],colorbar=False)
 #o.plot_property('z')
 #o.plot_property('z', mean=True)
-#o.animation
+o.animation(fast=True, color='origin_marker', legend=['Målselv','Aursfjord','Nordfjord'],colorbar=False)
