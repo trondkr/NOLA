@@ -70,10 +70,10 @@ for t in start_times:
 
 
 # Running model
-o.run(time_step=3600, duration=timedelta(days=2), time_step_output=3600*2, outfile=outfile, export_variables=['time', 'lon', 'lat', 'z','origin_marker'], export_buffer_length=4)
+o.run(time_step=3600, duration=timedelta(days=2), time_step_output=3600*2, outfile=outfile, export_buffer_length=4)
 
 # Show output
-o.plot(fast=True, linecolor='origin_marker', legend=['Målselv','Aursfjord','Nordfjord'],colorbar=False)
+o.plot(fast=True, linecolor='origin_marker', legend=['Målselv','Aursfjord','Nordfjord'],colorbar=False,filename='drift_plot.png')
 #o.plot_property('z')
 #o.plot_property('z', mean=True)
-o.animation(fast=True, color='origin_marker', legend=['Målselv','Aursfjord','Nordfjord'],colorbar=False)
+o.animation(fast=True, color='origin_marker', legend=['Målselv','Aursfjord','Nordfjord'],colorbar=False,filename='drift_animation.mp4')

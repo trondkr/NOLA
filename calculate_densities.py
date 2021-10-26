@@ -23,15 +23,21 @@ outfile = 'nolaDrift.nc'  # Raw simulation output
 # will read and process data chuck-by-chunk directly from file using Dask.
 o = opendrift.open_xarray(outfile)
 
+# Simple density plot:
+d = o.get_histogram(pixelsize_m=1500) # Number of particles per 1500m pixel
+d = d.sum(dim='origin_marker') # Sum over all origins
+o.animation(background=d.where(d>0),show_elements=False)
+
+
 #%%
 # We want to extract timeseries of river water at the coordinates of a hypothetical measuring station
 # as well as the amount of river water passing through two defined areas/regions
-station_lon = 9.4
-station_lat = 58.1
-box1_lon = [8.4, 8.8]
-box1_lat = [57.9, 58.1]
-box2_lon = [9.5, 9.9]
-box2_lat = [58.3, 58.5]
+station_lon = 18.4
+station_lat = 69.5
+box1_lon = [18.5, 18.6]
+box1_lat = [69.4, 69.42]
+box2_lon = [18.15,18.25]
+box2_lat = [69.5, 69.52]
 
 #%%
 # Animation of the spatial density of river runoff water.
