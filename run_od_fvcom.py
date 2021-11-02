@@ -18,7 +18,7 @@ from opendrift.readers import reader_shape
 from opendrift.models.oceandrift import OceanDrift
 
 outfile = 'nolaDrift.nc'
-o = OceanDrift(loglevel=20,logfile='log.txt')
+o = OceanDrift(loglevel=20) #logfile='log.txt')
 
 #Readers
 reader_coast = reader_shape.Reader.from_shpfiles('coast/po10_coast.shp')
@@ -29,7 +29,7 @@ o.add_reader(reader_coast) # Add coastline identical to the FVCOM grid
 
 proj = "+proj=utm +zone=33W, +north +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
 
-fl = Filelist('fileList.txt', start_time='2018-4-1-0', stop_time='2018-4-7-0') # List of path to forcing
+fl = Filelist('fileList.txt', start_time='2018-4-1-0', stop_time='2018-4-4-0') # List of path to forcing
 unique_files = fl.unique_files()
 
 for f in unique_files:
@@ -40,9 +40,13 @@ for f in unique_files:
 
 #Configuration 
 o.set_config('general:use_auto_landmask',False) # Override default landmask
-
 o.set_config('general:coastline_action', 'previous') # Jump back to previous position when meeting coast
-
+o.set_config('drift:vertical_mixing',True) # Move particles vertically according to eddy diffusivity and buoyancy 
+o.set_config('vertical_mixing:diffusivitymodel', 'windspeed_Sundby1983')
+o.set_config('drift:vertical_advection',True) # Move particles vertically according to vertical ocean currents
+o.set_config('environment:fallback:sea_surface_wave_stokes_drift_x_velocity',.2)
+#o.set_config('drift:current_uncertainty',2)
+#o.set_config('drift:wind_uncertainty',2)
 
 N = 2 # Number of particles
 #z = -10 * np.random.uniform(0, 1, N)
@@ -73,7 +77,7 @@ for t in start_times:
 o.run(time_step=3600, duration=timedelta(days=2), time_step_output=3600*2, outfile=outfile, export_buffer_length=4)
 
 # Show output
-o.plot(fast=True, linecolor='origin_marker', legend=['Målselv','Aursfjord','Nordfjord'],colorbar=False,filename='drift_plot.png')
-#o.plot_property('z')
+#o.plot(fast=True, linecolor='origin_marker', legend=['Målselv','Aursfjord','Nordfjord'],colorbar=False,filename='drift_plot.png')
+o.plot_property('z')
 #o.plot_property('z', mean=True)
-o.animation(fast=True, color='origin_marker', legend=['Målselv','Aursfjord','Nordfjord'],colorbar=False,filename='drift_animation.mp4')
+#o.animation(fast=True, color='origin_marker', legend=['Målselv','Aursfjord','Nordfjord'],colorbar=False,filename='drift_animation.mp4')

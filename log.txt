@@ -1,103 +1,87 @@
-13:24:10 INFO    opendrift.models.basemodel: OpenDriftSimulation initialised (version 1.7.1 / v1.7.1-151-g4a29d77-dirty)
-13:24:10 INFO    opendrift.readers.reader_shape: Pre-processing 190 geometries
-13:24:10 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Opening dataset: /data/MATNOC/PO10/output06/PO10_0028.nc
-13:24:10 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Opening file with Dataset
-13:24:10 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Using custom projection: +proj=utm +zone=33W, +north +ellps=WGS84 +datum=WGS84 +units=m +no_defs..
-13:24:10 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Reading grid and coordinate variables..
-13:24:13 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Opening dataset: /data/MATNOC/PO10/output06/PO10_0029.nc
-13:24:13 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Opening file with Dataset
-13:24:13 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Using custom projection: +proj=utm +zone=33W, +north +ellps=WGS84 +datum=WGS84 +units=m +no_defs..
-13:24:13 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Reading grid and coordinate variables..
-13:24:16 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Opening dataset: /data/MATNOC/PO10/output06/PO10_0030.nc
-13:24:16 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Opening file with Dataset
-13:24:16 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Using custom projection: +proj=utm +zone=33W, +north +ellps=WGS84 +datum=WGS84 +units=m +no_defs..
-13:24:16 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Reading grid and coordinate variables..
-13:24:18 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Opening dataset: /data/MATNOC/PO10/output06/PO10_0031.nc
-13:24:18 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Opening file with Dataset
-13:24:18 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Using custom projection: +proj=utm +zone=33W, +north +ellps=WGS84 +datum=WGS84 +units=m +no_defs..
-13:24:18 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Reading grid and coordinate variables..
-13:24:20 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Opening dataset: /data/MATNOC/PO10/output06/PO10_0032.nc
-13:24:20 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Opening file with Dataset
-13:24:20 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Using custom projection: +proj=utm +zone=33W, +north +ellps=WGS84 +datum=WGS84 +units=m +no_defs..
-13:24:20 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Reading grid and coordinate variables..
-13:24:22 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Opening dataset: /data/MATNOC/PO10/output06/PO10_0033.nc
-13:24:22 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Opening file with Dataset
-13:24:22 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Using custom projection: +proj=utm +zone=33W, +north +ellps=WGS84 +datum=WGS84 +units=m +no_defs..
-13:24:22 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Reading grid and coordinate variables..
-13:24:24 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Opening dataset: /data/MATNOC/PO10/output06/PO10_0034.nc
-13:24:24 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Opening file with Dataset
-13:24:24 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Using custom projection: +proj=utm +zone=33W, +north +ellps=WGS84 +datum=WGS84 +units=m +no_defs..
-13:24:24 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Reading grid and coordinate variables..
-13:24:27 INFO    opendrift.models.basemodel: Fallback values will be used for the following variables which have no readers: 
-13:24:27 INFO    opendrift.models.basemodel: 	ocean_vertical_diffusivity: 0.000000
-13:24:27 INFO    opendrift.models.basemodel: 	sea_surface_wave_significant_height: 0.000000
-13:24:27 INFO    opendrift.models.basemodel: 	sea_surface_wave_stokes_drift_x_velocity: 0.000000
-13:24:27 INFO    opendrift.models.basemodel: 	sea_surface_wave_stokes_drift_y_velocity: 0.000000
-13:24:27 INFO    opendrift.models.basemodel: 	sea_surface_wave_period_at_variance_spectral_density_maximum: 0.000000
-13:24:27 INFO    opendrift.models.basemodel: 	sea_surface_wave_mean_period_from_variance_spectral_density_second_frequency_moment: 0.000000
-13:24:27 INFO    opendrift.models.basemodel: 	surface_downward_x_stress: 0.000000
-13:24:27 INFO    opendrift.models.basemodel: 	surface_downward_y_stress: 0.000000
-13:24:27 INFO    opendrift.models.basemodel: 	turbulent_kinetic_energy: 0.000000
-13:24:27 INFO    opendrift.models.basemodel: 	turbulent_generic_length_scale: 0.000000
-13:24:27 INFO    opendrift.models.basemodel: 	ocean_mixed_layer_thickness: 50.000000
-13:24:27 INFO    opendrift.models.basemodel: Using existing reader for land_binary_mask
-13:24:27 INFO    opendrift.models.basemodel: All points are in ocean
-13:24:27 INFO    opendrift.models.basemodel: 2018-04-01 00:00:00 - step 1 of 48 - 6 active elements (0 deactivated)
-13:24:31 INFO    opendrift.models.basemodel: 2018-04-01 01:00:00 - step 2 of 48 - 6 active elements (0 deactivated)
-13:24:31 INFO    opendrift.models.basemodel: 2018-04-01 02:00:00 - step 3 of 48 - 6 active elements (0 deactivated)
-13:24:33 INFO    opendrift.models.basemodel: 2018-04-01 03:00:00 - step 4 of 48 - 6 active elements (0 deactivated)
-13:24:34 INFO    opendrift.models.basemodel: 2018-04-01 04:00:00 - step 5 of 48 - 6 active elements (0 deactivated)
-13:24:35 INFO    opendrift.models.basemodel: 2018-04-01 05:00:00 - step 6 of 48 - 6 active elements (0 deactivated)
-13:24:38 INFO    opendrift.models.basemodel: 2018-04-01 06:00:00 - step 7 of 48 - 6 active elements (0 deactivated)
-13:24:41 INFO    opendrift.export.io_netcdf: Wrote 4 steps to file nolaDrift.nc
-13:24:41 INFO    opendrift.models.basemodel: 2018-04-01 07:00:00 - step 8 of 48 - 6 active elements (0 deactivated)
-13:24:45 INFO    opendrift.models.basemodel: 2018-04-01 08:00:00 - step 9 of 48 - 6 active elements (0 deactivated)
-13:24:49 INFO    opendrift.models.basemodel: 2018-04-01 09:00:00 - step 10 of 48 - 6 active elements (0 deactivated)
-13:24:55 INFO    opendrift.models.basemodel: 2018-04-01 10:00:00 - step 11 of 48 - 6 active elements (0 deactivated)
-13:25:01 INFO    opendrift.models.basemodel: 2018-04-01 11:00:00 - step 12 of 48 - 6 active elements (0 deactivated)
-13:25:01 INFO    opendrift.models.basemodel: 2018-04-01 12:00:00 - step 13 of 48 - 6 active elements (0 deactivated)
-13:25:12 INFO    opendrift.models.basemodel: 2018-04-01 13:00:00 - step 14 of 48 - 6 active elements (0 deactivated)
-13:25:16 INFO    opendrift.models.basemodel: 2018-04-01 14:00:00 - step 15 of 48 - 6 active elements (0 deactivated)
-13:25:22 INFO    opendrift.export.io_netcdf: Wrote 4 steps to file nolaDrift.nc
-13:25:22 INFO    opendrift.models.basemodel: 2018-04-01 15:00:00 - step 16 of 48 - 6 active elements (0 deactivated)
-13:25:29 INFO    opendrift.models.basemodel: 2018-04-01 16:00:00 - step 17 of 48 - 6 active elements (0 deactivated)
-13:25:33 INFO    opendrift.models.basemodel: 2018-04-01 17:00:00 - step 18 of 48 - 6 active elements (0 deactivated)
-13:25:39 INFO    opendrift.models.basemodel: 2018-04-01 18:00:00 - step 19 of 48 - 6 active elements (0 deactivated)
-13:25:46 INFO    opendrift.models.basemodel: 2018-04-01 19:00:00 - step 20 of 48 - 6 active elements (0 deactivated)
-13:25:54 INFO    opendrift.models.basemodel: 2018-04-01 20:00:00 - step 21 of 48 - 6 active elements (0 deactivated)
-13:26:01 INFO    opendrift.models.basemodel: 2018-04-01 21:00:00 - step 22 of 48 - 6 active elements (0 deactivated)
-13:26:08 INFO    opendrift.models.basemodel: 2018-04-01 22:00:00 - step 23 of 48 - 6 active elements (0 deactivated)
-13:26:15 INFO    opendrift.export.io_netcdf: Wrote 4 steps to file nolaDrift.nc
-13:26:15 INFO    opendrift.models.basemodel: 2018-04-01 23:00:00 - step 24 of 48 - 6 active elements (0 deactivated)
-13:26:23 INFO    opendrift.models.basemodel: 2018-04-02 00:00:00 - step 25 of 48 - 12 active elements (0 deactivated)
-13:26:29 INFO    opendrift.models.basemodel: 2018-04-02 01:00:00 - step 26 of 48 - 12 active elements (0 deactivated)
-13:26:34 INFO    opendrift.models.basemodel: 2018-04-02 02:00:00 - step 27 of 48 - 12 active elements (0 deactivated)
-13:26:42 INFO    opendrift.models.basemodel: 2018-04-02 03:00:00 - step 28 of 48 - 12 active elements (0 deactivated)
-13:26:48 INFO    opendrift.models.basemodel: 2018-04-02 04:00:00 - step 29 of 48 - 12 active elements (0 deactivated)
-13:26:53 INFO    opendrift.models.basemodel: 2018-04-02 05:00:00 - step 30 of 48 - 12 active elements (0 deactivated)
-13:27:01 INFO    opendrift.models.basemodel: 2018-04-02 06:00:00 - step 31 of 48 - 12 active elements (0 deactivated)
-13:27:11 INFO    opendrift.export.io_netcdf: Wrote 4 steps to file nolaDrift.nc
-13:27:11 INFO    opendrift.models.basemodel: 2018-04-02 07:00:00 - step 32 of 48 - 12 active elements (0 deactivated)
-13:27:20 INFO    opendrift.models.basemodel: 2018-04-02 08:00:00 - step 33 of 48 - 12 active elements (0 deactivated)
-13:27:29 INFO    opendrift.models.basemodel: 2018-04-02 09:00:00 - step 34 of 48 - 12 active elements (0 deactivated)
-13:27:37 INFO    opendrift.models.basemodel: 2018-04-02 10:00:00 - step 35 of 48 - 12 active elements (0 deactivated)
-13:27:45 INFO    opendrift.models.basemodel: 2018-04-02 11:00:00 - step 36 of 48 - 12 active elements (0 deactivated)
-13:27:45 INFO    opendrift.models.basemodel: 2018-04-02 12:00:00 - step 37 of 48 - 12 active elements (0 deactivated)
-13:28:06 INFO    opendrift.models.basemodel: 2018-04-02 13:00:00 - step 38 of 48 - 12 active elements (0 deactivated)
-13:28:13 INFO    opendrift.models.basemodel: 2018-04-02 14:00:00 - step 39 of 48 - 12 active elements (0 deactivated)
-13:28:22 INFO    opendrift.export.io_netcdf: Wrote 4 steps to file nolaDrift.nc
-13:28:22 INFO    opendrift.models.basemodel: 2018-04-02 15:00:00 - step 40 of 48 - 12 active elements (0 deactivated)
-13:28:30 INFO    opendrift.models.basemodel: 2018-04-02 16:00:00 - step 41 of 48 - 12 active elements (0 deactivated)
-13:28:41 INFO    opendrift.models.basemodel: 2018-04-02 17:00:00 - step 42 of 48 - 12 active elements (0 deactivated)
-13:28:47 INFO    opendrift.models.basemodel: 2018-04-02 18:00:00 - step 43 of 48 - 12 active elements (0 deactivated)
-13:28:57 INFO    opendrift.models.basemodel: 2018-04-02 19:00:00 - step 44 of 48 - 12 active elements (0 deactivated)
-13:29:03 INFO    opendrift.models.basemodel: 2018-04-02 20:00:00 - step 45 of 48 - 12 active elements (0 deactivated)
-13:29:12 INFO    opendrift.models.basemodel: 2018-04-02 21:00:00 - step 46 of 48 - 12 active elements (0 deactivated)
-13:29:22 INFO    opendrift.models.basemodel: 2018-04-02 22:00:00 - step 47 of 48 - 12 active elements (0 deactivated)
-13:29:30 INFO    opendrift.export.io_netcdf: Wrote 4 steps to file nolaDrift.nc
-13:29:30 INFO    opendrift.models.basemodel: 2018-04-02 23:00:00 - step 48 of 48 - 12 active elements (0 deactivated)
-13:29:40 INFO    opendrift.export.io_netcdf: Wrote 1 steps to file nolaDrift.nc
-13:29:41 WARNING opendrift.models.basemodel: Plotting fast. This will make your plots less accurate.
-13:29:42 INFO    opendrift.models.basemodel: Time to make plot: 0:00:01.892687
-13:29:42 WARNING opendrift.models.basemodel: Plotting fast. This will make your plots less accurate.
-13:29:43 INFO    opendrift.models.basemodel: Saving animation to drift_animation.mp4...
+16:49:01 INFO    opendrift.models.basemodel: OpenDriftSimulation initialised (version 1.7.1 / v1.7.1-151-g4a29d77-dirty)
+16:49:01 INFO    opendrift.readers.reader_shape: Pre-processing 190 geometries
+16:49:02 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Opening dataset: /data/MATNOC/PO10/output06/PO10_0028.nc
+16:49:02 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Opening file with Dataset
+16:49:02 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Using custom projection: +proj=utm +zone=33W, +north +ellps=WGS84 +datum=WGS84 +units=m +no_defs..
+16:49:02 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Reading grid and coordinate variables..
+16:49:05 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Opening dataset: /data/MATNOC/PO10/output06/PO10_0029.nc
+16:49:05 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Opening file with Dataset
+16:49:05 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Using custom projection: +proj=utm +zone=33W, +north +ellps=WGS84 +datum=WGS84 +units=m +no_defs..
+16:49:05 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Reading grid and coordinate variables..
+16:49:07 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Opening dataset: /data/MATNOC/PO10/output06/PO10_0030.nc
+16:49:07 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Opening file with Dataset
+16:49:07 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Using custom projection: +proj=utm +zone=33W, +north +ellps=WGS84 +datum=WGS84 +units=m +no_defs..
+16:49:07 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Reading grid and coordinate variables..
+16:49:10 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Opening dataset: /data/MATNOC/PO10/output06/PO10_0031.nc
+16:49:10 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Opening file with Dataset
+16:49:10 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Using custom projection: +proj=utm +zone=33W, +north +ellps=WGS84 +datum=WGS84 +units=m +no_defs..
+16:49:10 INFO    opendrift.readers.reader_netCDF_CF_unstructured: Reading grid and coordinate variables..
+16:49:15 INFO    opendrift.models.basemodel: Fallback values will be used for the following variables which have no readers: 
+16:49:15 INFO    opendrift.models.basemodel: 	ocean_vertical_diffusivity: 0.000000
+16:49:15 INFO    opendrift.models.basemodel: 	sea_surface_wave_significant_height: 0.000000
+16:49:15 INFO    opendrift.models.basemodel: 	sea_surface_wave_stokes_drift_x_velocity: 0.000000
+16:49:15 INFO    opendrift.models.basemodel: 	sea_surface_wave_stokes_drift_y_velocity: 0.000000
+16:49:15 INFO    opendrift.models.basemodel: 	sea_surface_wave_period_at_variance_spectral_density_maximum: 0.000000
+16:49:15 INFO    opendrift.models.basemodel: 	sea_surface_wave_mean_period_from_variance_spectral_density_second_frequency_moment: 0.000000
+16:49:15 INFO    opendrift.models.basemodel: 	surface_downward_x_stress: 0.000000
+16:49:15 INFO    opendrift.models.basemodel: 	surface_downward_y_stress: 0.000000
+16:49:15 INFO    opendrift.models.basemodel: 	turbulent_kinetic_energy: 0.000000
+16:49:15 INFO    opendrift.models.basemodel: 	turbulent_generic_length_scale: 0.000000
+16:49:15 INFO    opendrift.models.basemodel: 	ocean_mixed_layer_thickness: 50.000000
+16:49:15 INFO    opendrift.models.basemodel: Using existing reader for land_binary_mask
+16:49:15 INFO    opendrift.models.basemodel: All points are in ocean
+16:49:15 INFO    opendrift.models.basemodel: 2018-04-01 00:00:00 - step 1 of 48 - 6 active elements (0 deactivated)
+16:49:20 INFO    opendrift.models.basemodel: 2018-04-01 01:00:00 - step 2 of 48 - 6 active elements (0 deactivated)
+16:49:22 INFO    opendrift.models.basemodel: 2018-04-01 02:00:00 - step 3 of 48 - 6 active elements (0 deactivated)
+16:49:24 INFO    opendrift.models.basemodel: 2018-04-01 03:00:00 - step 4 of 48 - 6 active elements (0 deactivated)
+16:49:26 INFO    opendrift.models.basemodel: 2018-04-01 04:00:00 - step 5 of 48 - 6 active elements (0 deactivated)
+16:49:29 INFO    opendrift.models.basemodel: 2018-04-01 05:00:00 - step 6 of 48 - 6 active elements (0 deactivated)
+16:49:32 INFO    opendrift.models.basemodel: 2018-04-01 06:00:00 - step 7 of 48 - 6 active elements (0 deactivated)
+16:49:35 INFO    opendrift.export.io_netcdf: Wrote 4 steps to file nolaDrift.nc
+16:49:35 INFO    opendrift.models.basemodel: 2018-04-01 07:00:00 - step 8 of 48 - 6 active elements (0 deactivated)
+16:49:37 INFO    opendrift.models.basemodel: 2018-04-01 08:00:00 - step 9 of 48 - 6 active elements (0 deactivated)
+16:49:40 INFO    opendrift.models.basemodel: 2018-04-01 09:00:00 - step 10 of 48 - 6 active elements (0 deactivated)
+16:49:46 INFO    opendrift.models.basemodel: 2018-04-01 10:00:00 - step 11 of 48 - 6 active elements (0 deactivated)
+16:49:48 INFO    opendrift.models.basemodel: 2018-04-01 11:00:00 - step 12 of 48 - 6 active elements (0 deactivated)
+16:49:48 INFO    opendrift.models.basemodel: 2018-04-01 12:00:00 - step 13 of 48 - 6 active elements (0 deactivated)
+16:49:54 INFO    opendrift.models.basemodel: 2018-04-01 13:00:00 - step 14 of 48 - 6 active elements (0 deactivated)
+16:49:55 INFO    opendrift.models.basemodel: 2018-04-01 14:00:00 - step 15 of 48 - 6 active elements (0 deactivated)
+16:49:58 INFO    opendrift.export.io_netcdf: Wrote 4 steps to file nolaDrift.nc
+16:49:58 INFO    opendrift.models.basemodel: 2018-04-01 15:00:00 - step 16 of 48 - 6 active elements (0 deactivated)
+16:50:00 INFO    opendrift.models.basemodel: 2018-04-01 16:00:00 - step 17 of 48 - 6 active elements (0 deactivated)
+16:50:04 INFO    opendrift.models.basemodel: 2018-04-01 17:00:00 - step 18 of 48 - 6 active elements (0 deactivated)
+16:50:07 INFO    opendrift.models.basemodel: 2018-04-01 18:00:00 - step 19 of 48 - 6 active elements (0 deactivated)
+16:50:10 INFO    opendrift.models.basemodel: 2018-04-01 19:00:00 - step 20 of 48 - 6 active elements (0 deactivated)
+16:50:12 INFO    opendrift.models.basemodel: 2018-04-01 20:00:00 - step 21 of 48 - 6 active elements (0 deactivated)
+16:50:14 INFO    opendrift.models.basemodel: 2018-04-01 21:00:00 - step 22 of 48 - 6 active elements (0 deactivated)
+16:50:18 INFO    opendrift.models.basemodel: 2018-04-01 22:00:00 - step 23 of 48 - 6 active elements (0 deactivated)
+16:50:19 INFO    opendrift.export.io_netcdf: Wrote 4 steps to file nolaDrift.nc
+16:50:19 INFO    opendrift.models.basemodel: 2018-04-01 23:00:00 - step 24 of 48 - 6 active elements (0 deactivated)
+16:50:20 INFO    opendrift.models.basemodel: 2018-04-02 00:00:00 - step 25 of 48 - 12 active elements (0 deactivated)
+16:50:23 INFO    opendrift.models.basemodel: 2018-04-02 01:00:00 - step 26 of 48 - 12 active elements (0 deactivated)
+16:50:25 INFO    opendrift.models.basemodel: 2018-04-02 02:00:00 - step 27 of 48 - 12 active elements (0 deactivated)
+16:50:28 INFO    opendrift.models.basemodel: 2018-04-02 03:00:00 - step 28 of 48 - 12 active elements (0 deactivated)
+16:50:31 INFO    opendrift.models.basemodel: 2018-04-02 04:00:00 - step 29 of 48 - 12 active elements (0 deactivated)
+16:50:34 INFO    opendrift.models.basemodel: 2018-04-02 05:00:00 - step 30 of 48 - 12 active elements (0 deactivated)
+16:50:37 INFO    opendrift.models.basemodel: 2018-04-02 06:00:00 - step 31 of 48 - 12 active elements (0 deactivated)
+16:50:40 INFO    opendrift.export.io_netcdf: Wrote 4 steps to file nolaDrift.nc
+16:50:40 INFO    opendrift.models.basemodel: 2018-04-02 07:00:00 - step 32 of 48 - 12 active elements (0 deactivated)
+16:50:42 INFO    opendrift.models.basemodel: 2018-04-02 08:00:00 - step 33 of 48 - 12 active elements (0 deactivated)
+16:50:46 INFO    opendrift.models.basemodel: 2018-04-02 09:00:00 - step 34 of 48 - 12 active elements (0 deactivated)
+16:50:51 INFO    opendrift.models.basemodel: 2018-04-02 10:00:00 - step 35 of 48 - 12 active elements (0 deactivated)
+16:50:55 INFO    opendrift.models.basemodel: 2018-04-02 11:00:00 - step 36 of 48 - 12 active elements (0 deactivated)
+16:50:55 INFO    opendrift.models.basemodel: 2018-04-02 12:00:00 - step 37 of 48 - 12 active elements (0 deactivated)
+16:51:04 INFO    opendrift.models.basemodel: 2018-04-02 13:00:00 - step 38 of 48 - 12 active elements (0 deactivated)
+16:51:10 INFO    opendrift.models.basemodel: 2018-04-02 14:00:00 - step 39 of 48 - 12 active elements (0 deactivated)
+16:51:14 INFO    opendrift.export.io_netcdf: Wrote 4 steps to file nolaDrift.nc
+16:51:14 INFO    opendrift.models.basemodel: 2018-04-02 15:00:00 - step 40 of 48 - 12 active elements (0 deactivated)
+16:51:18 INFO    opendrift.models.basemodel: 2018-04-02 16:00:00 - step 41 of 48 - 12 active elements (0 deactivated)
+16:51:22 INFO    opendrift.models.basemodel: 2018-04-02 17:00:00 - step 42 of 48 - 12 active elements (0 deactivated)
+16:51:26 INFO    opendrift.models.basemodel: 2018-04-02 18:00:00 - step 43 of 48 - 12 active elements (0 deactivated)
+16:51:26 INFO    opendrift.models.basemodel: 2018-04-02 19:00:00 - step 44 of 48 - 12 active elements (0 deactivated)
+16:51:29 INFO    opendrift.models.basemodel: 2018-04-02 20:00:00 - step 45 of 48 - 12 active elements (0 deactivated)
+16:51:33 INFO    opendrift.models.basemodel: 2018-04-02 21:00:00 - step 46 of 48 - 12 active elements (0 deactivated)
+16:51:35 INFO    opendrift.models.basemodel: 2018-04-02 22:00:00 - step 47 of 48 - 12 active elements (0 deactivated)
+16:51:37 INFO    opendrift.export.io_netcdf: Wrote 4 steps to file nolaDrift.nc
+16:51:37 INFO    opendrift.models.basemodel: 2018-04-02 23:00:00 - step 48 of 48 - 12 active elements (0 deactivated)
+16:51:40 INFO    opendrift.export.io_netcdf: Wrote 1 steps to file nolaDrift.nc

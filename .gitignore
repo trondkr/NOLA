@@ -132,3 +132,4 @@ dmypy.json
 dep_env/
 dep_env.yml
 *.nc
+Glomma_particles/
