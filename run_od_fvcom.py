@@ -17,8 +17,10 @@ from opendrift.readers import reader_netCDF_CF_unstructured # FVCOM reader
 from opendrift.readers import reader_shape
 from opendrift.models.oceandrift import OceanDrift
 
-outfile = 'nolaDrift.nc'
+
 o = OceanDrift(loglevel=20) #logfile='log.txt')
+start_time='2018-3-1-0'
+stop_time='2018-6-1-0'
 
 #Readers
 reader_coast = reader_shape.Reader.from_shpfiles('coast/po10_coast.shp')
@@ -29,7 +31,7 @@ o.add_reader(reader_coast) # Add coastline identical to the FVCOM grid
 
 proj = "+proj=utm +zone=33W, +north +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
 
-fl = Filelist('fileList.txt', start_time='2018-4-1-0', stop_time='2018-4-4-0') # List of path to forcing
+fl = Filelist('fileList.txt', start_time=start_time, stop_time=stop_time) # List of path to forcing
 unique_files = fl.unique_files()
 
 for f in unique_files:
@@ -48,7 +50,7 @@ o.set_config('environment:fallback:sea_surface_wave_stokes_drift_x_velocity',.2)
 #o.set_config('drift:current_uncertainty',2)
 #o.set_config('drift:wind_uncertainty',2)
 
-N = 2 # Number of particles
+N = 10 # Number of particles
 #z = -10 * np.random.uniform(0, 1, N)
 z = -5 # Particle depth
 #Måselvsutløpet
@@ -65,19 +67,20 @@ z = -5 # Particle depth
 #utm33 = Proj(proj)
 #x1, y1 = utm33(lon1, lat1)
 
-start_times = [datetime(2018, 4, 1, 0), datetime(2018, 4, 2, 0)] # Seed at specific times
-#start_times = [fl.datetime[0] + timedelta(hours=n) for n in range(0, 24*4, 6)] # Seed at multiple times
+#start_times = [datetime(2018, 4, 1, 0), datetime(2018, 4, 2, 0)] # Seed at specific times
+start_times = [fl.datetime[0] + timedelta(days=n) for n in range(0, 14, 1)] # Seed at multiple times
 for t in start_times:
-    o.seed_elements(lon=18.507, lat=69.245, z=z, time=t, number=N, radius=20, origin_marker=0) #Målselv
-    o.seed_elements(lon=18.696, lat=69.261, z=z, time=t, number=N, radius=20, origin_marker=1) #Aursfjord 
-    o.seed_elements(lon=18.998, lat=69.289, z=z, time=t, number=N, radius=20, origin_marker=2) #Nordfjordbotn
+    o.seed_elements(lon=18.5160648, lat=69.2769774, z=z, time=t, number=N, radius=20, origin_marker=0) #Målselv
+    o.seed_elements(lon=18.7029564, lat=69.2612744, z=z, time=t, number=N, radius=20, origin_marker=1) #Aursfjord 
+    o.seed_elements(lon=18.9946535, lat=69.2933032, z=z, time=t, number=N, radius=20, origin_marker=2) #Nordfjordbotn
 
 
 # Running model
-o.run(time_step=3600, duration=timedelta(days=2), time_step_output=3600*2, outfile=outfile, export_buffer_length=4)
+outfile = '../results/opendrift_%s_to_%s.nc'%(start_time,stop_time)
+o.run(time_step=3600, end_time=fl.datetime[-1], time_step_output=3600*24, outfile=outfile, export_buffer_length=4)
 
 # Show output
 #o.plot(fast=True, linecolor='origin_marker', legend=['Målselv','Aursfjord','Nordfjord'],colorbar=False,filename='drift_plot.png')
-o.plot_property('z')
+#o.plot_property('z')
 #o.plot_property('z', mean=True)
 #o.animation(fast=True, color='origin_marker', legend=['Målselv','Aursfjord','Nordfjord'],colorbar=False,filename='drift_animation.mp4')
