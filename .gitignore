@@ -134,4 +134,5 @@ dep_env.yml
 submit_job.sh
 slurm*
 *.nc
+*.sh
 Glomma_particles/
