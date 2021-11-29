@@ -150,4 +150,10 @@ o.plot(background=mas.where(mas>0), fast=True, show_particles=False,filename='fi
 # Cleaning up
 os.remove(histogram_file)
 
-
+# Plots of depth - has to be done with regular file opening
+o = opendrift.open(outfile)
+#o.animation_profile() # Animation of depth distribution by time/longitude
+o.plot_property('z',filename='figures/verticalDistAllParticles_%s_to_%s.png'%(start_time,stop_time)) # Depth distribution all particles
+o.plot_property('z',mean=True,filename='figures/verticalDistMean_%s_to_%s.png'%(start_time,stop_time)) # Mean depth distribution per timestep
+o.animate_vertical_distribution(filename='figures/verticalDist_timestep_%s_to_%s.mp4'%(start_time,stop_time)) # Distribution in depth over time
+#o.plot_vertical_distribution(filename='figures/verticalDist_timestep_%s_to_%s.mp4'%(start_time,stop_time)) # Interactive plot with time step, cannot be saved?
