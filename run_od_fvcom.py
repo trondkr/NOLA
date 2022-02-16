@@ -48,7 +48,7 @@ o.set_config('drift:vertical_mixing',True) # Move particles vertically according
 o.set_config('vertical_mixing:diffusivitymodel', 'windspeed_Sundby1983')
 o.set_config('drift:vertical_advection',True) # Move particles vertically according to vertical ocean currents
 o.set_config('environment:fallback:sea_surface_wave_stokes_drift_x_velocity',.2)
-#o.set_config('drift:current_uncertainty',2)
+#o.set_config('drift:current_uncertainty',2) #Not used
 #o.set_config('drift:wind_uncertainty',2)
 
 N = 10 # Number of particles
