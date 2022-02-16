@@ -20,7 +20,8 @@ from opendrift.models.oceandrift import OceanDrift
 
 o = OceanDrift(loglevel=20) #logfile='log.txt')
 start_time='2018-3-1-0'
-stop_time='2018-6-1-0'
+stop_time='2018-3-16-0'
+run_name = 'inner_middle_outer'
 
 #Readers
 reader_coast = reader_shape.Reader.from_shpfiles('coast/po10_coast.shp')
@@ -54,15 +55,18 @@ N = 10 # Number of particles
 #z = -10 * np.random.uniform(0, 1, N)
 z = -5 # Particle depth
 #Måselvsutløpet
-#lon1 = [18.521, 18.696, 18.998]
-#lat2 = [69.308, 69.261, 69.289]
+lon_m_inner = [18.5047601] 
+lat_m_inner = [69.2452673]
+lon_m_middle = [18.5160648] 
+lat_m_middle = [69.2769774] 
+lon_m_outer = [18.5326005] 
+lat_m_outer = [69.3019249] 
 #Aursfjordbotn
-#lon1 = [18.521, 18.696, 18.998]
-#lat2 = [69.308, 69.261, 69.289]
+#lon_a = [18.7029564]
+#lat_a = [69.2612744]
 #Nordfjordbotn
-#lon1 = [18.521, 18.696, 18.998]
-#lat2 = [69.308, 69.261, 69.289]
-
+#lon_n = [18.9946535]
+#lat_n = [69.2933032]
 
 #utm33 = Proj(proj)
 #x1, y1 = utm33(lon1, lat1)
@@ -70,13 +74,13 @@ z = -5 # Particle depth
 #start_times = [datetime(2018, 4, 1, 0), datetime(2018, 4, 2, 0)] # Seed at specific times
 start_times = [fl.datetime[0] + timedelta(days=n) for n in range(0, 14, 1)] # Seed at multiple times
 for t in start_times:
-    o.seed_elements(lon=18.5160648, lat=69.2769774, z=z, time=t, number=N, radius=20, origin_marker=0) #Målselv
-    o.seed_elements(lon=18.7029564, lat=69.2612744, z=z, time=t, number=N, radius=20, origin_marker=1) #Aursfjord 
-    o.seed_elements(lon=18.9946535, lat=69.2933032, z=z, time=t, number=N, radius=20, origin_marker=2) #Nordfjordbotn
+    o.seed_elements(lon=lon_m_inner, lat=lat_m_inner, z=z, time=t, number=N, radius=20, origin_marker=0) 
+    o.seed_elements(lon=lon_m_middle, lat=lat_m_middle, z=z, time=t, number=N, radius=20, origin_marker=1)
+    o.seed_elements(lon=lon_m_outer, lat=lat_m_outer, z=z, time=t, number=N, radius=20, origin_marker=2)
 
 
 # Running model
-outfile = '../results/opendrift_%s_to_%s.nc'%(start_time,stop_time)
+outfile = '../results/%s_%s_to_%s.nc'%(run_name,start_time,stop_time)
 o.run(time_step=3600, end_time=fl.datetime[-1], time_step_output=3600*24, outfile=outfile, export_buffer_length=4)
 
 # Show output

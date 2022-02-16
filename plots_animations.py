@@ -17,7 +17,7 @@ from opendrift.readers import reader_oscillating
 
 start_time='2018-3-1-0'
 stop_time='2018-6-1-0'
-rivers=['Målselv','Aursfjord','Nordfjordbotn']
+rivers=['Målselv_inner','Målselv_middle','Målselv_outer']
 outfile = '../results/opendrift_%s_to_%s.nc'%(start_time,stop_time) # Raw simulation output
 histogram_file = 'runoff_histogram.nc'
 
@@ -136,15 +136,15 @@ num.name = 'number'
 num.to_netcdf(histogram_file)
 
 mas = o.get_histogram(pixelsize_m=1500, weights=o.ds['age_seconds'], density=False)
-mas = mas/3600  # in hours
+mas = mas/(3600*24)  # in daus
 mas = mas/num  # per area
 mas.name='mean_age'
 mas.to_netcdf(histogram_file, 'a')
-mas = mas.mean(dim='time').sum(dim='origin_marker')  # Mean time of both rivers
-#mas = mas.mean(dim='time').isel(origin_marker=1)  # Mean age of a single river
-mas.name='Mean age of water [hours]'
-
-o.plot(background=mas.where(mas>0), fast=True, show_particles=False,filename='figures/meanWaterAge_%s_to_%s.png'%(start_time,stop_time))
+for x in [0,1,2]:
+    #mas = mas.mean(dim='time').sum(dim='origin_marker')  # Mean time of both rivers
+    mas_x = mas.mean(dim='time').isel(origin_marker=x)  # Mean age of a single river
+    mas_x.name='Mean age of water [days]'
+    o.plot(background=mas_x.where(mas_x>0), fast=True, show_particles=False,filename='figures/meanWaterAge_%s_%s_to_%s.png'%(rivers[x],start_time,stop_time))
 
 
 # Cleaning up
