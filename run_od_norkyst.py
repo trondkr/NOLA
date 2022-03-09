@@ -18,7 +18,7 @@ from opendrift.models.oceandrift import OceanDrift
 o = OceanDrift(loglevel=20) #logfile='log.txt')
 
 startDay='2018-3-1-1'
-endDay='2018-3-7-0'
+endDay='2018-3-3-0'
 startTime = datetime.strptime(startDay, '%Y-%m-%d-%H')
 endTime = datetime.strptime(endDay, '%Y-%m-%d-%H')
 run_name = 'testing_fram'
