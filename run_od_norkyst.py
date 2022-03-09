@@ -28,7 +28,7 @@ outfile = '/cluster/projects/nn9297k/NOLA-SIS/results/%s_%s_to_%s.nc'%(run_name,
 ####Readers
 
 #Find forcing files needed based on days:
-day_i = startTime
+day_i = startTimes
 day_range = [startTime]
 while day_i<(endTime + relativedelta(days=1)):
     day_i = day_i + relativedelta(days=1)

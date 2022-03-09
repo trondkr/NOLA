@@ -35,17 +35,17 @@ rw = river_water.sum(dim='origin_marker') # Sum over all origins
 
 # Total coverage on the last time step:
 rwlast = rw[-1]
-o.plot(background=rwlast.where(rwlast>0), fast=True, show_particles=False, title='Last timestep-All rivers',filename='figures/lastStepAllRivers_%s_to_%s.png'%(startDay,endDay))
+o.plot(background=rwlast.where(rwlast>0), fast=True, show_elements=False, title='Last timestep-All rivers',filename='figures/lastStepAllRivers_%s_to_%s.png'%(startDay,endDay))
 
 # Cumulative coverage:
 rwcum = rw.sum(dim='time')
-o.plot(background=rwcum.where(rwcum>0), fast=True, show_particles=False, title='Cumulative-All rivers',filename='figures/cumulativeAllRivers_%s_to_%s.png'%(startDay,endDay))
+o.plot(background=rwcum.where(rwcum>0), fast=True, show_elements=False, title='Cumulative-All rivers',filename='figures/cumulativeAllRivers_%s_to_%s.png'%(startDay,endDay))
 
 # Coverage per origin
 for x in [0,1,2]:
     rwx = river_water.isel(origin_marker=x)
     rwcumx = rwx.sum(dim='time')
-    o.plot(background=rwcumx.where(rwcumx>0), fast=True, show_particles=False, title='Cumulative-%s'%(rivers[x]),filename='figures/cumulative_%s__%s_to_%s.png'%(rivers[x],startDay,endDay))
+    o.plot(background=rwcumx.where(rwcumx>0), fast=True, show_elements=False, title='Cumulative-%s'%(rivers[x]),filename='figures/cumulative_%s__%s_to_%s.png'%(rivers[x],startDay,endDay))
 
 #%%
 # We want to extract timeseries of river water at the coordinates of a hypothetical measuring station
@@ -145,7 +145,7 @@ for x in [0,1,2]:
     #mas = mas.mean(dim='time').sum(dim='origin_marker')  # Mean time of both rivers
     mas_x = mas.mean(dim='time').isel(origin_marker=x)  # Mean age of a single river
     mas_x.name='Mean age of water [days]'
-    o.plot(background=mas_x.where(mas_x>0), fast=True, show_particles=False,filename='figures/meanWaterAge_%s_%s_to_%s.png'%(rivers[x],startDay,endDay))
+    o.plot(background=mas_x.where(mas_x>0), fast=True, show_elements=False,filename='figures/meanWaterAge_%s_%s_to_%s.png'%(rivers[x],startDay,endDay))
 
 
 # Cleaning up
