@@ -2,6 +2,7 @@
 
 import sys 
 sys.path.append('/cluster/home/kristokv/opendrift')
+sys.path.append('../opendrift')
 import os
 from datetime import datetime, date, time, timedelta
 from dateutil.relativedelta import relativedelta
@@ -42,8 +43,8 @@ while i < len(day_range)-1:
 	pattern_norkyst.append(x)
 	i += 1
 
-proj = "+proj=stere +ellps=WGS84 +lat_0=90.0 +lat_ts=60.0 +x_0=1848640 +y_0=1432320 +lon_0=70"
-reader_norkyst = reader_ROMS_native.Reader(pattern_norkyst, proj4=proj)
+#proj = "+proj=stere +ellps=WGS84 +lat_0=90.0 +lat_ts=60.0 +x_0=1848640 +y_0=1432320 +lon_0=70"
+reader_norkyst = reader_ROMS_native.Reader(pattern_norkyst)
 o.add_reader([reader_norkyst]) 
 
 #Adding readers "lazily"
