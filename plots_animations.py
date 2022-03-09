@@ -1,8 +1,4 @@
 #!/usr/bin/env python
-"""
-River runoff
-===========================
-"""
 
 import sys 
 sys.path.append('/cluster/home/kristokv/opendrift')
