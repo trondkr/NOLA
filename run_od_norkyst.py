@@ -76,12 +76,13 @@ lon_m_outer_w = [18.5056143]
 lat_m_outer_w = [69.3062551] 
 
 #months =  list(range(2, 10)) # Seed all months Feb-Oct
-months =  list(range(2, 3)) # Seed all months Feb-Oct
+months =  list(range(2, 4)) # Seed all months Feb-Oct
 for month in months:
     num_days = calendar.monthrange(startTime.year, month)[1]
-    day1 = datetime.combine(date(startTime.year, month, 1), datetime.min.time())
-    dayn = datetime.combine(date(startTime.year, month, num_days), datetime.min.time())
-    o.seed_cone(lon=[lon_m_outer_e, lon_m_outer_w], lat=[lat_m_outer_e, lat_m_outer_w], number=N, radius=20,time=[day1, dayn], origin_marker=month)
+    days = [date(startTime.year, month, day) for day in range(1, num_days+1)]
+    for day in days:
+        day = datetime.combine(day, datetime.min.time())
+        o.seed_cone(lon=[lon_m_outer_e, lon_m_outer_w], lat=[lat_m_outer_e, lat_m_outer_w], number=N, radius=20,time=day, origin_marker=month)
 
 # Running model
 o.run(time_step=3600, end_time=endTime, time_step_output=3600*24, outfile=outfile, export_buffer_length=4)
