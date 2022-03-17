@@ -5,6 +5,7 @@ sys.path.append('/cluster/home/kristokv/opendrift')
 sys.path.append('../opendrift')
 import os
 from datetime import datetime, date, time, timedelta
+import calendar
 from dateutil.relativedelta import relativedelta
 import numpy as np
 #import cartopy.io.shapereader as shpreader
@@ -17,13 +18,18 @@ from opendrift.models.oceandrift import OceanDrift
 
 o = OceanDrift(loglevel=20) #logfile='log.txt')
 
-startDay='2018-3-1-1'
-endDay='2018-3-3-0'
+# Define run
+year = '2018'
+startDay= year + '-2-1-1'
+#endDay=year + '-12-31-1'
+endDay=year + '-3-28-1'
 startTime = datetime.strptime(startDay, '%Y-%m-%d-%H')
 endTime = datetime.strptime(endDay, '%Y-%m-%d-%H')
+print ("Run planned from %s to %s"%(startTime,endTime))
+
 run_name = 'testing_fram'
 outfile = '/cluster/projects/nn9297k/NOLA-SIS/results/%s_%s_to_%s.nc'%(run_name,startDay,endDay)
-
+print ("Output will be stored in %s"%(outfile))
 
 ####Readers
 
@@ -54,38 +60,30 @@ o.add_reader([reader_norkyst])
 #o.set_config('general:use_auto_landmask',False) # Override default landmask
 o.set_config('general:coastline_action', 'previous') # Jump back to previous position when meeting coast
 o.set_config('drift:vertical_mixing',True) # Move particles vertically according to eddy diffusivity and buoyancy 
-o.set_config('vertical_mixing:diffusivitymodel', 'windspeed_Sundby1983')
+#o.set_config('vertical_mixing:diffusivitymodel', 'windspeed_Sundby1983') # Not necessary since vertical diffusivity is included in the Norkyst files
 o.set_config('drift:vertical_advection',True) # Move particles vertically according to vertical ocean currents
 o.set_config('environment:fallback:sea_surface_wave_stokes_drift_x_velocity',.2)
 #o.set_config('drift:current_uncertainty',2) #Not used
 #o.set_config('drift:wind_uncertainty',2)
 
+#Seeding setup
 N = 10 # Number of particles
-#z = -10 * np.random.uniform(0, 1, N)
-z = -5 # Particle depth
-#Måselvsutløpet
-lon_m_inner = [18.5047601] 
-lat_m_inner = [69.2452673]
-lon_m_middle = [18.5160648] 
-lat_m_middle = [69.2769774] 
-lon_m_outer = [18.5326005] 
-lat_m_outer = [69.3019249] 
-
+z = np.random.uniform(-5, -0.1, N) # Particle release depth between -5 and surface
+#Seed in cone at the mouth of Måselv
 lon_m_outer_e = [18.5382232] 
 lat_m_outer_e = [69.3079802] 
 lon_m_outer_w = [18.5056143] 
 lat_m_outer_w = [69.3062551] 
 
+#months =  list(range(2, 10)) # Seed all months Feb-Oct
+months =  list(range(2, 3)) # Seed all months Feb-Oct
+for month in months:
+    num_days = calendar.monthrange(startTime.year, month)[1]
+    days = [date(startTime.year, month, day) for day in range(1, num_days+1)]
+    day1 = [date(startTime.year, month, 1)]
+    dayn = [date(startTime.year, month, num_days)]
+    o.seed_cone(lon=[lon_m_outer_e, lon_m_outer_w], lat=[lat_m_outer_e, lat_m_outer_w], number=N, radius=20,time=[day1, dayn], origin_marker=month)
 
-
-#start_times = [datetime(2018, 4, 1, 0), datetime(2018, 4, 2, 0)] # Seed at specific times
-start_times = [startTime + timedelta(days=n) for n in range(0, 14, 1)] # Seed at multiple times
-for t in start_times:
-    #o.seed_elements(lon=lon_m_inner, lat=lat_m_inner, z=z, time=t, number=N, radius=20, origin_marker=0) 
-    #o.seed_elements(lon=lon_m_middle, lat=lat_m_middle, z=z, time=t, number=N, radius=20, origin_marker=1)
-    #o.seed_elements(lon=lon_m_outer, lat=lat_m_outer, z=z, time=t, number=N, radius=20, origin_marker=2)
-    o.seed_cone(lon=[lon_m_outer_e, lon_m_outer_w], lat=[lat_m_outer_e, lat_m_outer_w], number=N, radius=20,time=t)
-            
 # Running model
 o.run(time_step=3600, end_time=endTime, time_step_output=3600*24, outfile=outfile, export_buffer_length=4)
 
