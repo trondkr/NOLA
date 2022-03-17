@@ -17,7 +17,6 @@ from opendrift.readers import reader_oscillating
 startDay='2018-3-1-0'
 endDay='2018-3-7-0'
 run_name = 'opendrift'
-rivers=['Målselv_inner','Målselv_middle','Målselv_outer']
 histogram_file = 'runoff_histogram.nc'
 
 outfile = '../results/%s_%s_to_%s.nc'%(run_name,startDay,endDay)
