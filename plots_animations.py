@@ -58,27 +58,30 @@ for x in [0,1,2]:
 #rw = river_water.isel(origin_marker=1)    # For one of the rivers
 river_water.name = 'River water [particles/cell]'
 
-station_lon = 18.39
-station_lat = 69.47
-box1_lon = [18.33, 18.56]
-box1_lat = [69.4, 69.42]
-box2_lon = [17.9,18.1]
-box2_lat = [69.52, 69.54]
+local_box_lon = [18.462861, 18.562647]
+local_box_lat = [69.304173, 69.357645]
+inner_box_lon = [18.349934, 19.000649]
+inner_box_lat = [69.257388, 69.438920]
+middle_box_lon = [17.863399, 18.718452]
+middle_box_lat = [69.438921, 69.571700]
+outer_box_lon = [17.508940, 18.035973]
+outer_box_lat = [69.571701, 69.653855]
 
-text = [{'s': rivers[0], 'x': 18.25, 'y': 69.26, 'fontsize': 10, 'color': 'g',
-         'backgroundcolor': 'white', 'bbox': dict(facecolor='white', alpha=0.6), 'zorder': 1000},
-        {'s': rivers[1], 'x': 18.65, 'y': 69.26, 'fontsize': 10, 'color': 'g',
-         'backgroundcolor': 'white', 'bbox': dict(facecolor='white', alpha=0.6), 'zorder': 1000},
-        {'s': rivers[2], 'x': 19.1, 'y': 69.26, 'fontsize': 10, 'color': 'g',
-         'backgroundcolor': 'white', 'bbox': dict(facecolor='white', alpha=0.6), 'zorder': 1000},
-        {'s': '* Station', 'x': station_lon, 'y': station_lat, 'fontsize': 10, 'color': 'k',
-         'backgroundcolor': 'white', 'bbox': dict(facecolor='none', edgecolor='none', alpha=0.4), 'zorder': 1000}]
-box = [{'lon': box1_lon, 'lat': box1_lat, 'text': 'Area 1', 'fc': 'none', 'alpha': 0.8, 'lw': 1, 'ec': 'k'},
-       {'lon': box2_lon, 'lat': box2_lat, 'text': 'Area 2', 'fc': 'none', 'alpha': 0.8, 'lw': 1, 'ec': 'k'}]
+#text = [{'s': rivers[0], 'x': 18.25, 'y': 69.26, 'fontsize': 10, 'color': 'g',
+#         'backgroundcolor': 'white', 'bbox': dict(facecolor='white', alpha=0.6), 'zorder': 1000},
+#        {'s': rivers[1], 'x': 18.65, 'y': 69.26, 'fontsize': 10, 'color': 'g',
+#         'backgroundcolor': 'white', 'bbox': dict(facecolor='white', alpha=0.6), 'zorder': 1000},
+#        {'s': rivers[2], 'x': 19.1, 'y': 69.26, 'fontsize': 10, 'color': 'g',
+#         'backgroundcolor': 'white', 'bbox': dict(facecolor='white', alpha=0.6), 'zorder': 1000},
+#        {'s': '* Station', 'x': station_lon, 'y': station_lat, 'fontsize': 10, 'color': 'k',
+#         'backgroundcolor': 'white', 'bbox': dict(facecolor='none', edgecolor='none', alpha=0.4), 'zorder': 1000}]
+box = [{'lon': local_box_lon, 'lat': local_box_lat, 'text': 'Local area', 'fc': 'none', 'alpha': 0.8, 'lw': 1, 'ec': 'k'},
+       {'lon': inner_box_lon, 'lat': inner_box_lat, 'text': 'Inner area', 'fc': 'none', 'alpha': 0.8, 'lw': 1, 'ec': 'k'},
+       {'lon': middle_box_lon, 'lat': middle_box_lat, 'text': 'Middle area', 'fc': 'none', 'alpha': 0.8, 'lw': 1, 'ec': 'k'},
+       {'lon': outer_box_lon, 'lat': outer_box_lat, 'text': 'Outer area', 'fc': 'none', 'alpha': 0.8, 'lw': 1, 'ec': 'k'}]
 
 o.animation(background=rw.where(rw>0), bgalpha=1, fast=False,
-            show_elements=False, vmin=0, vmax=120, text=text, box=box,filename='figures/runoffThroughAreas_%s_to_%s.mp4'%(startDay,endDay))
-
+            show_elements=False, vmin=0, vmax=120, box=box,filename='figures/runoffThroughAreas_%s_to_%s.mp4'%(startDay,endDay))
 
 #%%
 # Plotting time series of river runoff, and corresponding water passing through the station and the two defined areas/box

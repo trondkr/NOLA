@@ -22,7 +22,7 @@ o = OceanDrift(loglevel=20) #logfile='log.txt')
 year = '2018'
 startDay= year + '-2-1-1'
 #endDay=year + '-12-31-1'
-endDay=year + '-3-28-1'
+endDay=year + '-3-31-1'
 startTime = datetime.strptime(startDay, '%Y-%m-%d-%H')
 endTime = datetime.strptime(endDay, '%Y-%m-%d-%H')
 print ("Run planned from %s to %s"%(startTime,endTime))
@@ -60,7 +60,7 @@ o.add_reader([reader_norkyst])
 #o.set_config('general:use_auto_landmask',False) # Override default landmask
 o.set_config('general:coastline_action', 'previous') # Jump back to previous position when meeting coast
 o.set_config('drift:vertical_mixing',True) # Move particles vertically according to eddy diffusivity and buoyancy 
-#o.set_config('vertical_mixing:diffusivitymodel', 'windspeed_Sundby1983') # Not necessary since vertical diffusivity is included in the Norkyst files
+o.set_config('vertical_mixing:diffusivitymodel', 'windspeed_Sundby1983') # Not necessary since vertical diffusivity is included in the Norkyst files
 o.set_config('drift:vertical_advection',True) # Move particles vertically according to vertical ocean currents
 o.set_config('environment:fallback:sea_surface_wave_stokes_drift_x_velocity',.2)
 #o.set_config('drift:current_uncertainty',2) #Not used
