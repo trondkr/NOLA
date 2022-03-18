@@ -21,8 +21,8 @@ o = OceanDrift(loglevel=20) #logfile='log.txt')
 # Define run
 year = '2018'
 startDay= year + '-2-1-1'
-#endDay=year + '-12-31-1'
-endDay=year + '-3-31-1'
+endDay=year + '-12-31-1'
+#endDay=year + '-3-31-1'
 startTime = datetime.strptime(startDay, '%Y-%m-%d-%H')
 endTime = datetime.strptime(endDay, '%Y-%m-%d-%H')
 print ("Run planned from %s to %s"%(startTime,endTime))
