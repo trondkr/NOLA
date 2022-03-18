@@ -75,8 +75,7 @@ lat_m_outer_e = [69.3079802]
 lon_m_outer_w = [18.5056143] 
 lat_m_outer_w = [69.3062551] 
 
-#months =  list(range(2, 10)) # Seed all months Feb-Oct
-months =  list(range(2, 4)) # Seed all months Feb-Oct
+months =  list(range(2, 10)) # Seed all months Feb-Oct
 for month in months:
     num_days = calendar.monthrange(startTime.year, month)[1]
     days = [date(startTime.year, month, day) for day in range(1, num_days+1)]
