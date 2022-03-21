@@ -8,6 +8,7 @@ output:
   html_document:
     toc: true # Gir Table of Contents i starten av dokumentet
     toc_depth: 2
+    fig_caption: true # Make sure images are treated as figures
 editor_options: 
   chunk_output_type: console
 ---
@@ -16,7 +17,7 @@ editor_options:
 #rm(list = ls())
 knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE)
 
-setwd("C:/NOLA-SIS_lokal/scripts")
+setwd("C:/NOLA-SIS_lokal/NOLA")
 
 # libraries
 #library(ncdf)
@@ -31,31 +32,44 @@ library(captioner)
 library(knitr)
 library(gridExtra)
 
+# Function to find first day of given month
+firstDayMonth=function(x)
+{           
+  x=as.Date(as.character(x))
+  day = format(x,format="%d")
+  monthYr = format(x,format="%Y-%m")
+  y = tapply(day,monthYr, min)
+  first=as.Date(paste(row.names(y),y,sep="-"))
+}
+
 
 # Map layers
-maparea_zoom <- get_stamenmap(bbox = c(left = 17.4, bottom = 69.2, 
+maparea_zoom <- get_stamenmap(bbox = c(left = 17.7, bottom = 69.2, 
                                        right = 19.2, top = 69.7), 
                               zoom = 10,maptype = "watercolor",color="bw",force = TRUE)
 
-maparea_large <- get_stamenmap(bbox = c(left = 15.5, bottom = 69.1, 
-                                        right = 24, top = 71), 
-                               zoom = 8,maptype = "terrain")
+maparea_large <- get_stamenmap(bbox = c(left = 17, bottom = 69.2, 
+                                        right = 20, top = 70), 
+                               zoom = 8,maptype = "watercolor")
 
 
 # Figure labels
 figs <- captioner(prefix="Figur")
 
-study_area <- figs(name="Study area.")
-particle_release <- figs(name="Number of particles released per day and cumulative number of particles in run.")
-num_particles <- figs(name="Number of particles in total.")
-num_particles_day <- figs(name="Number of particles at day x.")
+
+study_area <- figs(name="study_area","Study area. The black points show the particle release area at the mouth of the Målselv river. The colored boxes show the limits of areas used to describe the flow of river water in time and residence time of water.")
+particle_release <- figs(name="particle_release","Number of particles released per day and cumulative number of particles in run.")
+num_particles <- figs(name="num_particles","Cumulative distribution of particles during the simulation (counting all particles that have passed through a grid cell).")
+num_particles_day <- figs(name="num_particles_day","Distribution of particles in the study area at the first day of each month during the simulation.")
+num_particles_box <- figs(name="num_particles_box","Number of particles present within each subregion of the study area per day during the simulation.")
+
 
 ```
 
 
 ```{r read_data, include=FALSE}
-setwd("C:/NOLA-SIS_lokal/scripts")
-timespan<-"2018-2-1-1_to_2018-3-31-1"
+setwd("C:/NOLA-SIS_lokal/NOLA/")
+timespan<-"2018-2-1-1_to_2018-12-31-1"
 run_name<-"testing_fram"
 resultfile <- paste0("../results/",run_name,"_",timespan,".nc")
 DriftFile <- nc_open(resultfile, write=FALSE) #for nc
@@ -72,6 +86,8 @@ timesteps_days<-rep(NA,length(timesteps));timesteps_days[1]<-days_timestep
 for (i in 2:length(timesteps_days)){timesteps_days[i]<-timesteps_days[i-1]+days_timestep}
 timesteps_days_rounded<-ceiling(timesteps_days)
 index_newday<-tapply(seq_along(timesteps_days_rounded), timesteps_days_rounded, max) #the index of completed days
+
+dates_days <- data.frame(day=timesteps_days_rounded,date=dates)
 
 #Extract relevant variables
 status <- ncvar_get(DriftFile, 'status')    #0=active,<0=stranded/not yet released
@@ -144,22 +160,36 @@ localRaster <- raster(resolution = reso, xmn=min(local_box_lon), xmx=max(local_b
 
 # Introduction
 
+## Aims
+For a northern Norwegian case study site, use high-resolution particle-tracking modeling to study the seasonality of river outflow and residence time of river water in the fjord to understand the role of seasonality and high flow events for fjord biogeochemistry and land-ocean fluxes.   
+
 # Methods
+
 ## Study area
+The study area encompasses the mouth of the Målselv river in Northern Norway and the downstream Malangen fjord that can transport river water out into the Norwegian Sea (`r figs("study_area", display = "cite")`). We released particles in a band at the river mouth of the Målselv river, i.e. at the transition from ~5 meter to deeper water. The study area was divided into four boxes at varying distance from the river mouth to study the flux of river water and residence time.     
+
 ```{r study_area, fig.cap = study_area, fig.height = 4, fig.width = 7}
 #Plot distribution at release
-ggmap(maparea_zoom) + 
+ggmap(maparea_large) + 
   geom_point(data=dat  %>% filter(day==1),
              aes(x = lon, y = lat), size=2,color="black")  +
-  geom_rect(aes(xmin = min(local_box_lon), xmax = max(local_box_lon), ymin = min(local_box_lat), ymax = max(local_box_lat)), alpha=0.1, fill="red") +
+  geom_rect(aes(xmin = min(local_box_lon), xmax = max(local_box_lon), ymin = min(local_box_lat), ymax = max(local_box_lat)), alpha=0.2, fill="firebrick") +
+  geom_text(aes(x = min(local_box_lon), y = max(local_box_lat-0.015), label = "Local box"),size = 5, vjust = 0, hjust = 0, color = "firebrick")+
   geom_rect(aes(xmin = min(inner_box_lon), xmax = max(inner_box_lon), ymin = min(inner_box_lat), ymax = max(inner_box_lat)), alpha=0.1, fill="orange") +
+    geom_text(aes(x = min(inner_box_lon), y = max(inner_box_lat-0.015), label = "Inner box"),size = 5, vjust = 0, hjust = 0, color = "red")+
     geom_rect(aes(xmin = min(middle_box_lon), xmax = max(middle_box_lon), ymin = min(middle_box_lat), ymax = max(middle_box_lat)), alpha=0.1, fill="green") +
+      geom_text(aes(x = min(middle_box_lon), y = max(middle_box_lat-0.015), label = "Middle box"),size = 5, vjust = 0, hjust = 0, color = "dark green")+
     geom_rect(aes(xmin = min(outer_box_lon), xmax = max(outer_box_lon), ymin = min(outer_box_lat), ymax = max(outer_box_lat)), alpha=0.1, fill="blue") +
+        geom_text(aes(x = min(outer_box_lon), y = max(outer_box_lat-0.015), label = "Outer box"),size = 5, vjust = 0, hjust = 0, color = "dark blue")+
   xlab("Lon (°E)") + ylab("Lat (°N)")
 
 ```
 
 ## Number of particles released
+We start the simulation on the 1st of February and release 10 particles per day from this day until the end of September, and follow the drift of particles until the end of the year (31st of December). (`r figs("particle_release", display = "cite")`) shows .    
+
+As a first trial, this is done for 2018, but the same will be repeated for 2019, 2020 and 2021. 
+
 ```{r particle_release, fig.cap = particle_release, fig.height = 4, fig.width = 7}
 num_particles_timestep<-apply(lon,1,FUN=function(x) length(x[!is.na(x)]))
 new_particles_timestep<-c(num_particles_timestep[1],diff(num_particles_timestep)) 
@@ -169,20 +199,23 @@ particledat <- data.frame(Date=dates, New = new_particles_timestep, Total = num_
 newp <- 
   ggplot(data=particledat, aes(x=Date,y=New)) +
   geom_bar(stat="identity", fill ="light blue")+
-  theme_minimal()
+  ylab("New particles released per day") +
+  theme_minimal() +
+  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) 
 
 allp <- 
   ggplot(data=particledat, aes(x=Date,y=Total)) +
   geom_bar(stat="identity", fill ="light blue")+
-  theme_minimal()
+  ylab("Total number of active particles") +
+  theme_minimal()+
+  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) 
 
 grid.arrange(newp,allp,ncol=2)  
-
 
 ```
 
 # Results
-Total number of particles per grid cell (`r figs("num_particles", display = "cite")`).  
+Cumulatively over the course of the year (February to December), the river water is distributed thorughout the study area, with highest densities over time in some local areas along the coast in the inner Malangen fjord, in addition to the release area (where all river water passes through initially, `r figs("num_particles", display = "cite")`).  
 
 ```{r num_particles, fig.cap = num_particles, fig.height = 4, fig.width = 7}
 
@@ -199,66 +232,119 @@ ggmap(maparea_zoom) +
 
 ```
   
-Distribution of particles at specific day (`r figs("num_particles_day", display = "cite")`).  
+`r figs("num_particles_day", display = "cite")` shows the distribution of particles at the first day of each month of the simulation.  
 
-```{r num_particles_day, fig.cap = num_particles_day, fig.height = 4, fig.width = 9}
+```{r num_particles_day, fig.cap = num_particles_day, fig.height = 11, fig.width = 9}
 
-days <- seq(1,max(timesteps_days_rounded),14)
+days <- firstDayMonth(unique(dat_sp$date))
 
 plotlist <- list()
 
 for(i in 1:length(days)){
-  dat_i <- dat_sp[dat_sp$day==days[i],]
+  dat_i <- dat_sp[dat_sp$date==days[i],]
   rasterNumParts <- rasterize(x=dat_i[,1], y=fullRaster, fun="count")
   rasterNumParts <- as.data.frame(rasterNumParts , xy=T, na.rm=T)
   
   plotlist[[i]] <- ggmap(maparea_zoom) + 
-    geom_raster(data = rasterNumParts, aes(x = x, y = y, fill=ID)) +
-    coord_fixed(ratio=1.5) +
-    scale_fill_gradientn(colours=topo.colors(500, alpha=0.4), name="Number") +
-    labs(title=paste0("Day: ",days[i]))
-
+  geom_raster(data = rasterNumParts, aes(x = x, y = y, fill=ID)) +
+  coord_fixed(ratio=1.5) +
+  scale_fill_gradientn(colours=topo.colors(500, alpha=0.4), name="Number", limits=c(0,20)) +
+    ggtitle(days[i]) +
+  # geom_text(aes(x = -Inf, y = -Inf, label = days[i]),size = 5, vjust = 0, hjust = 0) 
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        axis.title.y=element_blank(),
+        legend.position="none",
+        plot.margin = rep(unit(0,"null"),4),
+        axis.line = element_line(color = NA)) 
 }
 
-do.call("grid.arrange", c(plotlist, ncol=2))
+lastplot <- ggmap(maparea_zoom) + 
+  geom_raster(data = rasterNumParts, aes(x = x, y = y, fill=ID)) +
+  coord_fixed(ratio=1.5) +
+  scale_fill_gradientn(colours=topo.colors(500, alpha=0.4), name="Number", limits=c(0,20))
 
+legend <- cowplot::get_legend(lastplot)
+plotlist[[i+1]] <- legend
+
+#do.call("grid.arrange", c(plotlist, ncol=3,heights=unit(rep(5,3), "in")))
+
+grid.arrange(grobs=plotlist, ncol=3, heights=unit(rep(2.2,4), "in"),widths=unit(rep(2,3), "in"))
 
 ```
 
-Number of particles per box and day  
+
+`r figs("num_particles_box", display = "cite")` shows the number of particles present within each per box (`r figs("study_area", display = "cite")`) per day during the simulation. The colors indicate the month of release of the particle ("origin").      
+
   
-```{r num_particles_box, fig.cap = num_particles_box, fig.height = 4, fig.width = 9}
-local_box_lon = c(18.462861, 18.562647)
-local_box_lat = c(69.304173, 69.357645)
-
-inner_box_lon = c(18.349934, 19.000649)
-inner_box_lat = c(69.257388, 69.438920)
-
-middle_box_lon = c(17.863399, 18.718452)
-middle_box_lat = c(69.438921, 69.571700)
-
-outer_box_lon = c(17.508940, 18.035973)
-outer_box_lat = c(69.571701, 69.653855)
+```{r num_particles_box, fig.cap = num_particles_box, fig.height = 6, fig.width = 9}
 
 counts_local <- dat %>% 
   filter(lon>min(local_box_lon) & lon<max(local_box_lon)) %>% 
   filter(lat>min(local_box_lat) & lat<max(local_box_lat)) %>% 
-  group_by(day) %>% 
+  group_by(day, origin) %>% 
   tally() %>% 
-  mutate(Date = dates)
+  left_join(dates_days)
 
-ggplot(data=counts_local, aes(x=Date,y=n)) +
-  geom_bar(stat="identity", fill ="light blue")+
-  theme_minimal()
+counts_inner <- dat %>% 
+  filter(lon>min(inner_box_lon) & lon<max(inner_box_lon)) %>% 
+  filter(lat>min(inner_box_lat) & lat<max(inner_box_lat)) %>% 
+  group_by(day, origin) %>% 
+  tally() %>% 
+  left_join(dates_days)
+
+counts_middle <- dat %>% 
+  filter(lon>min(middle_box_lon) & lon<max(middle_box_lon)) %>% 
+  filter(lat>min(middle_box_lat) & lat<max(middle_box_lat)) %>% 
+  group_by(day, origin) %>% 
+  tally() %>% 
+  left_join(dates_days)
+
+counts_outer <- dat %>% 
+  filter(lon>min(outer_box_lon) & lon<max(outer_box_lon)) %>% 
+  filter(lat>min(outer_box_lat) & lat<max(outer_box_lat)) %>% 
+  group_by(day, origin) %>% 
+  tally() %>% 
+  left_join(dates_days)
+
+ylims <- c(0,550)
+xlims<-(c(min(dat$date),max(dat$date)))
 
 
-rasterNumParts <- rasterize(x=dat_sp[,1], y=localRaster, fun="count")
-rasterNumParts <- as.data.frame(rasterNumParts , xy=T, na.rm=T)
+grid.arrange(ggplot(data=counts_local, aes(x=date,y=n,fill=origin)) +
+               geom_bar(stat="identity") +
+               xlim(xlims) + ylim(ylims)+
+               xlab("") +
+               ylab("Number of particles in area") +
+               ggtitle("Local box")  +
+               theme_minimal(),
+             
+             ggplot(data=counts_inner, aes(x=date,y=n,fill=origin)) +
+               geom_bar(stat="identity") +
+               xlim(xlims) + ylim(ylims)+
+               xlab("") +
+               ylab("") +
+               ggtitle("Inner box")  +
+               theme_minimal(),
+             
+             ggplot(data=counts_middle, aes(x=date,y=n,fill=origin)) +
+               geom_bar(stat="identity") +
+               xlim(xlims) + ylim(ylims)+
+               ylab("Number of particles in area") +
+               ggtitle("Middle box")  +
+               theme_minimal(),
+             
+             ggplot(data=counts_outer, aes(date,y=n,fill=origin)) +
+               geom_bar(stat="identity") +
+               xlim(xlims) + ylim(ylims)+
+               ylab("") +
+               ggtitle("Outer box")  +
+               theme_minimal(),
+             ncol=2)
 
-ggmap(maparea_zoom) + 
-  geom_raster(data = rasterNumParts, aes(x = x, y = y, fill=ID)) +
-  coord_fixed(ratio=1.5) +
-  scale_fill_gradientn(colours=topo.colors(500, alpha=0.4), name="Number")
 
 
 ```
