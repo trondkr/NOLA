@@ -1,0 +1,264 @@
+---
+params:
+   new_title: "NOLA-SIS results from particle tracking"
+title: "`r params$new_title`"
+author: "Kristina Øie Kvile, NIVA"
+date: '`r format(Sys.Date(), "%d %B %Y")`'
+output: 
+  html_document:
+    toc: true # Gir Table of Contents i starten av dokumentet
+    toc_depth: 2
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r settings, include=FALSE}
+#rm(list = ls())
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE)
+
+setwd("C:/NOLA-SIS_lokal/scripts")
+
+# libraries
+#library(ncdf)
+library(ncdf4)
+library(maps)
+library(mapdata)
+library(ggmap)
+library(tidyverse)
+library(sp)
+library(raster)
+library(captioner)
+library(knitr)
+library(gridExtra)
+
+
+# Map layers
+maparea_zoom <- get_stamenmap(bbox = c(left = 17.4, bottom = 69.2, 
+                                       right = 19.2, top = 69.7), 
+                              zoom = 10,maptype = "watercolor",color="bw",force = TRUE)
+
+maparea_large <- get_stamenmap(bbox = c(left = 15.5, bottom = 69.1, 
+                                        right = 24, top = 71), 
+                               zoom = 8,maptype = "terrain")
+
+
+# Figure labels
+figs <- captioner(prefix="Figur")
+
+study_area <- figs(name="Study area.")
+particle_release <- figs(name="Number of particles released per day and cumulative number of particles in run.")
+num_particles <- figs(name="Number of particles in total.")
+num_particles_day <- figs(name="Number of particles at day x.")
+
+```
+
+
+```{r read_data, include=FALSE}
+setwd("C:/NOLA-SIS_lokal/scripts")
+timespan<-"2018-2-1-1_to_2018-3-31-1"
+run_name<-"testing_fram"
+resultfile <- paste0("../results/",run_name,"_",timespan,".nc")
+DriftFile <- nc_open(resultfile, write=FALSE) #for nc
+#print(DriftFile)
+
+id  <- ncvar_get(DriftFile, 'trajectory')  # Particle ID
+
+#Create vector of timesteps in days:
+timesteps  <- ncvar_get(DriftFile, 'time')  # seconds since 1970-01-01 00:00:00 
+dates <- as.Date(as.POSIXct(timesteps, origin="1970-01-01"))
+
+days_timestep<-diff(timesteps)[1]/(60*60*24) #days per timestep
+timesteps_days<-rep(NA,length(timesteps));timesteps_days[1]<-days_timestep 
+for (i in 2:length(timesteps_days)){timesteps_days[i]<-timesteps_days[i-1]+days_timestep}
+timesteps_days_rounded<-ceiling(timesteps_days)
+index_newday<-tapply(seq_along(timesteps_days_rounded), timesteps_days_rounded, max) #the index of completed days
+
+#Extract relevant variables
+status <- ncvar_get(DriftFile, 'status')    #0=active,<0=stranded/not yet released
+origin <- ncvar_get(DriftFile, 'origin_marker');origin[status<0]<-NA    #source
+lon <- ncvar_get(DriftFile, 'lon');lon[status<0]<-NA
+lat <- ncvar_get(DriftFile, 'lat');lat[status<0]<-NA
+depth <- ncvar_get(DriftFile, 'z');depth[status<0]<-NA
+age_seconds <- ncvar_get(DriftFile, 'age_seconds');age_seconds[status<0]<-NA
+age_days <- floor(age_seconds/(60*60*24))
+
+#Environment
+# bottom_depth<-ncvar_get(DriftFile, 'sea_floor_depth_below_sea_level');bottom_depth[status<0]<-NA
+# x_wind<- ncvar_get(DriftFile, 'x_wind');x_wind[status<0]<-NA
+# y_wind<- ncvar_get(DriftFile, 'y_wind');y_wind[status<0]<-NA
+# x_velocity<- ncvar_get(DriftFile, 'x_sea_water_velocity');x_velocity[status<0]<-NA
+# y_velocity<- ncvar_get(DriftFile, 'y_sea_water_velocity');y_velocity[status<0]<-NA
+
+#Fixed vars:
+#ocean_vertical_diffusivity<-ncvar_get(DriftFile,'ocean_vertical_diffusivity') # 0 - BURDE DENNE VÆRT ENDRA, F.EKS. 0.02?
+#turbulent_generic_length_scale<- ncvar_get(DriftFile, 'turbulent_generic_length_scale') #0
+#surface_downward_y_stress / surface_downward_x_stress = 0W
+
+nc_close(DriftFile)
+
+# Make dataframe of relevant variables
+dayvector <- rep(timesteps_days_rounded, each = dim(origin)[2])
+datevector <- rep(dates, each = dim(origin)[2])
+
+dat <- pivot_longer(as.data.frame(origin), cols= 1:dim(origin)[2], values_to = "origin", names_to = "ID")  %>%
+      mutate(day=dayvector)  %>%
+      mutate(date=datevector)  %>%
+      mutate(age=c(t(age_days)))  %>%
+      mutate(lon=c(t(lon)))  %>%
+      mutate(lat=c(t(lat)))  %>%
+      mutate(depth=c(t(depth)))   %>%
+      filter(!is.na(origin))  %>%
+      mutate(origin=as.factor(origin)) %>%
+      mutate(origin_name=recode(origin, "0"="Inner","1"="Middle","2"="Outer")) 
+  
+
+```
+
+
+```{r define_boxes, include=FALSE}
+
+local_box_lon = c(18.462861, 18.562647)
+local_box_lat = c(69.304173, 69.357645)
+
+inner_box_lon = c(18.349934, 19.000649)
+inner_box_lat = c(69.257388, 69.438920)
+
+middle_box_lon = c(17.863399, 18.718452)
+middle_box_lat = c(69.438921, 69.571700)
+
+outer_box_lon = c(17.508940, 18.035973)
+outer_box_lat = c(69.571701, 69.653855)
+
+#Set resolution 
+reso <- c(0.01,0.005)
+
+#Creating raster for full study area
+fullRaster <- raster(resolution = reso, xmn=min(dat$lon), xmx=max(dat$lon), ymn=min(dat$lat), ymx=max(dat$lat))
+
+localRaster <- raster(resolution = reso, xmn=min(local_box_lon), xmx=max(local_box_lon), ymn=min(local_box_lat), ymx=max(local_box_lat))
+
+
+```
+
+
+
+# Introduction
+
+# Methods
+## Study area
+```{r study_area, fig.cap = study_area, fig.height = 4, fig.width = 7}
+#Plot distribution at release
+ggmap(maparea_zoom) + 
+  geom_point(data=dat  %>% filter(day==1),
+             aes(x = lon, y = lat), size=2,color="black")  +
+  geom_rect(aes(xmin = min(local_box_lon), xmax = max(local_box_lon), ymin = min(local_box_lat), ymax = max(local_box_lat)), alpha=0.1, fill="red") +
+  geom_rect(aes(xmin = min(inner_box_lon), xmax = max(inner_box_lon), ymin = min(inner_box_lat), ymax = max(inner_box_lat)), alpha=0.1, fill="orange") +
+    geom_rect(aes(xmin = min(middle_box_lon), xmax = max(middle_box_lon), ymin = min(middle_box_lat), ymax = max(middle_box_lat)), alpha=0.1, fill="green") +
+    geom_rect(aes(xmin = min(outer_box_lon), xmax = max(outer_box_lon), ymin = min(outer_box_lat), ymax = max(outer_box_lat)), alpha=0.1, fill="blue") +
+  xlab("Lon (°E)") + ylab("Lat (°N)")
+
+```
+
+## Number of particles released
+```{r particle_release, fig.cap = particle_release, fig.height = 4, fig.width = 7}
+num_particles_timestep<-apply(lon,1,FUN=function(x) length(x[!is.na(x)]))
+new_particles_timestep<-c(num_particles_timestep[1],diff(num_particles_timestep)) 
+particledat <- data.frame(Date=dates, New = new_particles_timestep, Total = num_particles_timestep)
+
+
+newp <- 
+  ggplot(data=particledat, aes(x=Date,y=New)) +
+  geom_bar(stat="identity", fill ="light blue")+
+  theme_minimal()
+
+allp <- 
+  ggplot(data=particledat, aes(x=Date,y=Total)) +
+  geom_bar(stat="identity", fill ="light blue")+
+  theme_minimal()
+
+grid.arrange(newp,allp,ncol=2)  
+
+
+```
+
+# Results
+Total number of particles per grid cell (`r figs("num_particles", display = "cite")`).  
+
+```{r num_particles, fig.cap = num_particles, fig.height = 4, fig.width = 7}
+
+dat_sp <- SpatialPointsDataFrame(cbind(dat$lon,dat$lat), data=dat)
+
+rasterNumParts <- rasterize(x=dat_sp[,1], y=fullRaster, fun="count")
+rasterNumParts <- as.data.frame(rasterNumParts , xy=T, na.rm=T)
+
+ggmap(maparea_zoom) + 
+  geom_raster(data = rasterNumParts, aes(x = x, y = y, fill=ID)) +
+  coord_fixed(ratio=1.5) +
+  scale_fill_gradientn(colours=topo.colors(500, alpha=0.4), name="Number")
+
+
+```
+  
+Distribution of particles at specific day (`r figs("num_particles_day", display = "cite")`).  
+
+```{r num_particles_day, fig.cap = num_particles_day, fig.height = 4, fig.width = 9}
+
+days <- seq(1,max(timesteps_days_rounded),14)
+
+plotlist <- list()
+
+for(i in 1:length(days)){
+  dat_i <- dat_sp[dat_sp$day==days[i],]
+  rasterNumParts <- rasterize(x=dat_i[,1], y=fullRaster, fun="count")
+  rasterNumParts <- as.data.frame(rasterNumParts , xy=T, na.rm=T)
+  
+  plotlist[[i]] <- ggmap(maparea_zoom) + 
+    geom_raster(data = rasterNumParts, aes(x = x, y = y, fill=ID)) +
+    coord_fixed(ratio=1.5) +
+    scale_fill_gradientn(colours=topo.colors(500, alpha=0.4), name="Number") +
+    labs(title=paste0("Day: ",days[i]))
+
+}
+
+do.call("grid.arrange", c(plotlist, ncol=2))
+
+
+```
+
+Number of particles per box and day  
+  
+```{r num_particles_box, fig.cap = num_particles_box, fig.height = 4, fig.width = 9}
+local_box_lon = c(18.462861, 18.562647)
+local_box_lat = c(69.304173, 69.357645)
+
+inner_box_lon = c(18.349934, 19.000649)
+inner_box_lat = c(69.257388, 69.438920)
+
+middle_box_lon = c(17.863399, 18.718452)
+middle_box_lat = c(69.438921, 69.571700)
+
+outer_box_lon = c(17.508940, 18.035973)
+outer_box_lat = c(69.571701, 69.653855)
+
+counts_local <- dat %>% 
+  filter(lon>min(local_box_lon) & lon<max(local_box_lon)) %>% 
+  filter(lat>min(local_box_lat) & lat<max(local_box_lat)) %>% 
+  group_by(day) %>% 
+  tally() %>% 
+  mutate(Date = dates)
+
+ggplot(data=counts_local, aes(x=Date,y=n)) +
+  geom_bar(stat="identity", fill ="light blue")+
+  theme_minimal()
+
+
+rasterNumParts <- rasterize(x=dat_sp[,1], y=localRaster, fun="count")
+rasterNumParts <- as.data.frame(rasterNumParts , xy=T, na.rm=T)
+
+ggmap(maparea_zoom) + 
+  geom_raster(data = rasterNumParts, aes(x = x, y = y, fill=ID)) +
+  coord_fixed(ratio=1.5) +
+  scale_fill_gradientn(colours=topo.colors(500, alpha=0.4), name="Number")
+
+
+```
