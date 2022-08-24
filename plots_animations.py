@@ -1,8 +1,9 @@
 #!/usr/bin/env python
+"""
+River runoff
+===========================
+"""
 
-import sys 
-sys.path.append('/cluster/home/kristokv/opendrift')
-sys.path.append('../opendrift')
 import os
 from datetime import datetime, timedelta
 import datetime
@@ -14,12 +15,11 @@ from opendrift.models.oceandrift import OceanDrift
 from opendrift.readers import reader_oscillating
 
 
-startDay='2018-3-1-0'
-endDay='2018-3-7-0'
-run_name = 'opendrift'
+start_time='2018-3-1-0'
+stop_time='2018-6-1-0'
+rivers=['Målselv_inner','Målselv_middle','Målselv_outer']
+outfile = '../results/opendrift_%s_to_%s.nc'%(start_time,stop_time) # Raw simulation output
 histogram_file = 'runoff_histogram.nc'
-
-outfile = '../results/%s_%s_to_%s.nc'%(run_name,startDay,endDay)
 
 #%%
 # Opening the output file lazily with Xarray.
@@ -34,17 +34,17 @@ rw = river_water.sum(dim='origin_marker') # Sum over all origins
 
 # Total coverage on the last time step:
 rwlast = rw[-1]
-o.plot(background=rwlast.where(rwlast>0), fast=True, show_elements=False, title='Last timestep-All rivers',filename='figures/lastStepAllRivers_%s_to_%s.png'%(startDay,endDay))
+o.plot(background=rwlast.where(rwlast>0), fast=True, show_particles=False, title='Last timestep-All rivers',filename='figures/lastStepAllRivers_%s_to_%s.png'%(start_time,stop_time))
 
 # Cumulative coverage:
 rwcum = rw.sum(dim='time')
-o.plot(background=rwcum.where(rwcum>0), fast=True, show_elements=False, title='Cumulative-All rivers',filename='figures/cumulativeAllRivers_%s_to_%s.png'%(startDay,endDay))
+o.plot(background=rwcum.where(rwcum>0), fast=True, show_particles=False, title='Cumulative-All rivers',filename='figures/cumulativeAllRivers_%s_to_%s.png'%(start_time,stop_time))
 
 # Coverage per origin
 for x in [0,1,2]:
     rwx = river_water.isel(origin_marker=x)
     rwcumx = rwx.sum(dim='time')
-    o.plot(background=rwcumx.where(rwcumx>0), fast=True, show_elements=False, title='Cumulative-%s'%(rivers[x]),filename='figures/cumulative_%s__%s_to_%s.png'%(rivers[x],startDay,endDay))
+    o.plot(background=rwcumx.where(rwcumx>0), fast=True, show_particles=False, title='Cumulative-%s'%(rivers[x]),filename='figures/cumulative_%s__%s_to_%s.png'%(rivers[x],start_time,stop_time))
 
 #%%
 # We want to extract timeseries of river water at the coordinates of a hypothetical measuring station
@@ -58,35 +58,32 @@ for x in [0,1,2]:
 #rw = river_water.isel(origin_marker=1)    # For one of the rivers
 river_water.name = 'River water [particles/cell]'
 
-local_box_lon = [18.462861, 18.562647]
-local_box_lat = [69.304173, 69.357645]
-inner_box_lon = [18.349934, 19.000649]
-inner_box_lat = [69.257388, 69.438920]
-middle_box_lon = [17.863399, 18.718452]
-middle_box_lat = [69.438921, 69.571700]
-outer_box_lon = [17.508940, 18.035973]
-outer_box_lat = [69.571701, 69.653855]
+station_lon = 18.39
+station_lat = 69.47
+box1_lon = [18.33, 18.56]
+box1_lat = [69.4, 69.42]
+box2_lon = [17.9,18.1]
+box2_lat = [69.52, 69.54]
 
-#text = [{'s': rivers[0], 'x': 18.25, 'y': 69.26, 'fontsize': 10, 'color': 'g',
-#         'backgroundcolor': 'white', 'bbox': dict(facecolor='white', alpha=0.6), 'zorder': 1000},
-#        {'s': rivers[1], 'x': 18.65, 'y': 69.26, 'fontsize': 10, 'color': 'g',
-#         'backgroundcolor': 'white', 'bbox': dict(facecolor='white', alpha=0.6), 'zorder': 1000},
-#        {'s': rivers[2], 'x': 19.1, 'y': 69.26, 'fontsize': 10, 'color': 'g',
-#         'backgroundcolor': 'white', 'bbox': dict(facecolor='white', alpha=0.6), 'zorder': 1000},
-#        {'s': '* Station', 'x': station_lon, 'y': station_lat, 'fontsize': 10, 'color': 'k',
-#         'backgroundcolor': 'white', 'bbox': dict(facecolor='none', edgecolor='none', alpha=0.4), 'zorder': 1000}]
-box = [{'lon': local_box_lon, 'lat': local_box_lat, 'text': 'Local area', 'fc': 'none', 'alpha': 0.8, 'lw': 1, 'ec': 'k'},
-       {'lon': inner_box_lon, 'lat': inner_box_lat, 'text': 'Inner area', 'fc': 'none', 'alpha': 0.8, 'lw': 1, 'ec': 'k'},
-       {'lon': middle_box_lon, 'lat': middle_box_lat, 'text': 'Middle area', 'fc': 'none', 'alpha': 0.8, 'lw': 1, 'ec': 'k'},
-       {'lon': outer_box_lon, 'lat': outer_box_lat, 'text': 'Outer area', 'fc': 'none', 'alpha': 0.8, 'lw': 1, 'ec': 'k'}]
+text = [{'s': rivers[0], 'x': 18.25, 'y': 69.26, 'fontsize': 10, 'color': 'g',
+         'backgroundcolor': 'white', 'bbox': dict(facecolor='white', alpha=0.6), 'zorder': 1000},
+        {'s': rivers[1], 'x': 18.65, 'y': 69.26, 'fontsize': 10, 'color': 'g',
+         'backgroundcolor': 'white', 'bbox': dict(facecolor='white', alpha=0.6), 'zorder': 1000},
+        {'s': rivers[2], 'x': 19.1, 'y': 69.26, 'fontsize': 10, 'color': 'g',
+         'backgroundcolor': 'white', 'bbox': dict(facecolor='white', alpha=0.6), 'zorder': 1000},
+        {'s': '* Station', 'x': station_lon, 'y': station_lat, 'fontsize': 10, 'color': 'k',
+         'backgroundcolor': 'white', 'bbox': dict(facecolor='none', edgecolor='none', alpha=0.4), 'zorder': 1000}]
+box = [{'lon': box1_lon, 'lat': box1_lat, 'text': 'Area 1', 'fc': 'none', 'alpha': 0.8, 'lw': 1, 'ec': 'k'},
+       {'lon': box2_lon, 'lat': box2_lat, 'text': 'Area 2', 'fc': 'none', 'alpha': 0.8, 'lw': 1, 'ec': 'k'}]
 
 o.animation(background=rw.where(rw>0), bgalpha=1, fast=False,
-            show_elements=False, vmin=0, vmax=120, box=box,filename='figures/runoffThroughAreas_%s_to_%s.mp4'%(startDay,endDay))
+            show_elements=False, vmin=0, vmax=120, text=text, box=box,filename='figures/runoffThroughAreas_%s_to_%s.mp4'%(start_time,stop_time))
+
 
 #%%
 # Plotting time series of river runoff, and corresponding water passing through the station and the two defined areas/box
-first = o.startDay
-last = o.endDay
+first = o.start_time
+last = o.end_time
 numdays = (last-first).days
 times = []
 for x in range (0, numdays):
@@ -129,7 +126,7 @@ for ax in [ax2, ax3, ax4]:
 ax4.set_title('Density of water particles at Station')
 ax4.xaxis.set_major_formatter(DateFormatter("%d %b %H"))
 #plt.show()
-fig.savefig('figures/timeSeriesThroughAres_%s_to_%s.png'%(startDay,endDay))
+fig.savefig('figures/timeSeriesThroughAres_%s_to_%s.png'%(start_time,stop_time))
 
 
 #%%
@@ -147,7 +144,7 @@ for x in [0,1,2]:
     #mas = mas.mean(dim='time').sum(dim='origin_marker')  # Mean time of both rivers
     mas_x = mas.mean(dim='time').isel(origin_marker=x)  # Mean age of a single river
     mas_x.name='Mean age of water [days]'
-    o.plot(background=mas_x.where(mas_x>0), fast=True, show_elements=False,filename='figures/meanWaterAge_%s_%s_to_%s.png'%(rivers[x],startDay,endDay))
+    o.plot(background=mas_x.where(mas_x>0), fast=True, show_particles=False,filename='figures/meanWaterAge_%s_%s_to_%s.png'%(rivers[x],start_time,stop_time))
 
 
 # Cleaning up
@@ -156,7 +153,7 @@ os.remove(histogram_file)
 # Plots of depth - has to be done with regular file opening
 o = opendrift.open(outfile)
 #o.animation_profile() # Animation of depth distribution by time/longitude
-o.plot_property('z',filename='figures/verticalDistAllParticles_%s_to_%s.png'%(startDay,endDay)) # Depth distribution all particles
-o.plot_property('z',mean=True,filename='figures/verticalDistMean_%s_to_%s.png'%(startDay,endDay)) # Mean depth distribution per timestep
-o.animate_vertical_distribution(filename='figures/verticalDist_timestep_%s_to_%s.mp4'%(startDay,endDay)) # Distribution in depth over time
-#o.plot_vertical_distribution(filename='figures/verticalDist_timestep_%s_to_%s.mp4'%(startDay,endDay)) # Interactive plot with time step, cannot be saved?
+o.plot_property('z',filename='figures/verticalDistAllParticles_%s_to_%s.png'%(start_time,stop_time)) # Depth distribution all particles
+o.plot_property('z',mean=True,filename='figures/verticalDistMean_%s_to_%s.png'%(start_time,stop_time)) # Mean depth distribution per timestep
+o.animate_vertical_distribution(filename='figures/verticalDist_timestep_%s_to_%s.mp4'%(start_time,stop_time)) # Distribution in depth over time
+#o.plot_vertical_distribution(filename='figures/verticalDist_timestep_%s_to_%s.mp4'%(start_time,stop_time)) # Interactive plot with time step, cannot be saved?

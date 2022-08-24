@@ -136,3 +136,10 @@ slurm*
 *.nc
 *.sh
 Glomma_particles/
+
+# R markdown stuff
+*.docx
+*.bib
+*.csl
+*.lua
+.Rhistory

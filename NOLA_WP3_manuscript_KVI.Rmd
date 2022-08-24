@@ -1,21 +1,45 @@
 ---
-params:
-   new_title: "NOLA-SIS results from particle tracking"
-title: "`r params$new_title`"
-author: "Kristina Øie Kvile, NIVA"
-date: '`r format(Sys.Date(), "%d %B %Y")`'
 output: 
-  html_document:
-    toc: true # Gir Table of Contents i starten av dokumentet
-    toc_depth: 2
+ 
+   word_document:
+    reference_docx: draft-styles-word.docx
     fig_caption: true # Make sure images are treated as figures
+    number_sections: false # Number sections
+    #toc: true # Gives Table of Contents 
+    #toc_depth: 2
+    pandoc_args:
+    - '--lua-filter=scholarly-metadata.lua'
+    - '--lua-filter=author-info-blocks.lua'
+bibliography: library.bib
+csl: frontiers-in-marine-science.csl
+title: "Seasonal and interannual variation in river water influence in an Arctic fjord"
+author:
+  - Kristina Ø. Kvile:
+      email: kristina.kvile@niva.no
+      institute: [NIVA]
+      correspondence: true
+  - name: Trond Kristiansen
+    institute: [NIVA]
+  - name: Jon Albretsen?
+    institute: [IMR]
+  - name: Angelika Renner?
+    institute: [IMR]
+  - name: Amanda Poste 
+    institute: [NIVA]
+institute:
+  - NIVA: Norwegian Institute for Water Research, Oslo, Norway
+  - IMR: Institute of Marine Research, Bergen, Norway
+abstract: "**Abstract**: *Introduction:* Climate change effects on freshwater fluxes in coastal ecosystems. *Method*: Particle tracking runs, following the fate of particles released at the Målselv river water into the Malangen fjord. *Results*: Seasonal and interannual variation in residence time of river water, spatial extent of river water. Effect of different particle types (neutral vs. sinking?). *Discussion*: Inputs from rivers to coast, potential ecological effects (light and nutrient availability, stratification)."
 editor_options: 
   chunk_output_type: console
+  always_allow_html: true
 ---
+
 
 ```{r settings, include=FALSE}
 #rm(list = ls())
 knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE)
+knitr::opts_chunk$set(fig.retina = 1)
 
 setwd("C:/NOLA-SIS_lokal/NOLA")
 
@@ -46,19 +70,20 @@ firstDayMonth=function(x)
 # Map layers
 maparea_zoom <- get_stamenmap(bbox = c(left = 17.7, bottom = 69.2, 
                                        right = 19.2, top = 69.7), 
-                              zoom = 10,maptype = "watercolor",color="bw",force = TRUE)
+                              zoom = 10,maptype = 'toner-lite')
 
 maparea_large <- get_stamenmap(bbox = c(left = 17, bottom = 69.2, 
-                                        right = 20, top = 70), 
-                               zoom = 8,maptype = "watercolor")
+                                        right = 19.5, top = 69.9), 
+                               zoom = 8,maptype = 'toner-lite')
+
 
 
 # Figure labels
 figs <- captioner(prefix="Figur")
 
 
-study_area <- figs(name="study_area","Study area. The black points show the particle release area at the mouth of the Målselv river. The colored boxes show the limits of areas used to describe the flow of river water in time and residence time of water.")
-particle_release <- figs(name="particle_release","Number of particles released per day and cumulative number of particles in run.")
+study_area <- figs(name="study_area","Study area. The black points show the particle release area at the mouth of the Målselv river. The colored boxes show the limits of four areas used to describe the distribution of river particles in time.")
+particle_release <- figs(name="particle_release","Number of particles released per day and the cumulative number of particles during the run for one year (2018, the setup is the same for all years).")
 num_particles <- figs(name="num_particles","Cumulative distribution of particles during the simulation (counting all particles that have passed through a grid cell).")
 num_particles_day <- figs(name="num_particles_day","Distribution of particles in the study area at the first day of each month during the simulation.")
 num_particles_box <- figs(name="num_particles_box","Number of particles present within each subregion of the study area per day during the simulation.")
@@ -160,36 +185,50 @@ localRaster <- raster(resolution = reso, xmn=min(local_box_lon), xmx=max(local_b
 
 # Introduction
 
+* Broad climate change context for the global north and for Northern Norway 
+    + Shifts in hydrology (freshwater fluxes, seasonality, frequency of high flow events) 
+    + Coastal darkening
+*	Importance of rivers for transport of nutrients/C/particles to the sea
+*	Potential impacts on coastal ecosystems (light availability, nutrient availability, stratification)
+*	Difference between dissolved (e.g. nutrients) and particulate (e.g. sediment particles) matter in behavior, residence time…
+*	Importance of residence time for the effect of river water in fjord systems
+*	If the residence time is very short, does the river output matter?
+*	Seasonal variation (spring freshet, degree of wind mixing), spatial variation (broad vs. narrow fjord system, deep vs. shallow sill)
+*	Importance of spatial extent – how far does the river output reach? 
+*	Dissolved vs. particulate
+
 ## Aims
-For a northern Norwegian case study site, use high-resolution particle-tracking modeling to study the seasonality of river outflow and residence time of river water in the fjord to understand the role of seasonality and high flow events for fjord biogeochemistry and land-ocean fluxes.   
+for a northern Norwegian case study site (Malangen, potentially compared with the Tana fjord), use high-resolution particle-tracking modeling to study the seasonality of river outflow and residence time of river water in the fjord to understanding the role of seasonality and high flow events for coastal darkening, river biogeochemistry and land-ocean fluxes.  
+        
 
 # Methods
 
 ## Study area
-The study area encompasses the mouth of the Målselv river in Northern Norway and the downstream Malangen fjord that can transport river water out into the Norwegian Sea (`r figs("study_area", display = "cite")`). We released particles in a band at the river mouth of the Målselv river, i.e. at the transition from ~5 meter to deeper water. The study area was divided into four boxes at varying distance from the river mouth to study the flux of river water and residence time.     
+The study area encompasses the mouth of the Målselv river in Northern Norway and the downstream Malangen fjord that can transport river water out into the Norwegian Sea (`r figs("study_area", display = "cite")`). We released particles in a band at the river mouth of the Målselv river, i.e. at the transition from ~5 meter to deeper water. The study area was divided into four boxes at varying distance from the river mouth to study the flux of river water and residence time.  
+*We could potentially compare to another system, f.ex. Tana?*
 
 ```{r study_area, fig.cap = study_area, fig.height = 4, fig.width = 7}
 #Plot distribution at release
 ggmap(maparea_large) + 
-  geom_point(data=dat  %>% filter(day==1),
-             aes(x = lon, y = lat), size=2,color="black")  +
-  geom_rect(aes(xmin = min(local_box_lon), xmax = max(local_box_lon), ymin = min(local_box_lat), ymax = max(local_box_lat)), alpha=0.2, fill="firebrick") +
-  geom_text(aes(x = min(local_box_lon), y = max(local_box_lat-0.015), label = "Local box"),size = 5, vjust = 0, hjust = 0, color = "firebrick")+
+  geom_rect(aes(xmin = min(local_box_lon), xmax = max(local_box_lon), ymin = min(local_box_lat), ymax = max(local_box_lat)), alpha=0.2, fill="red") +
+  geom_text(aes(x = min(local_box_lon), y = max(local_box_lat-0.02), label = "Local box"),size = 5, vjust = 0, hjust = 0, color = "red")+
   geom_rect(aes(xmin = min(inner_box_lon), xmax = max(inner_box_lon), ymin = min(inner_box_lat), ymax = max(inner_box_lat)), alpha=0.1, fill="orange") +
-    geom_text(aes(x = min(inner_box_lon), y = max(inner_box_lat-0.015), label = "Inner box"),size = 5, vjust = 0, hjust = 0, color = "red")+
+    geom_text(aes(x = min(inner_box_lon), y = max(inner_box_lat-0.02), label = "Inner box"),size = 5, vjust = 0, hjust = 0, color = "firebrick")+
     geom_rect(aes(xmin = min(middle_box_lon), xmax = max(middle_box_lon), ymin = min(middle_box_lat), ymax = max(middle_box_lat)), alpha=0.1, fill="green") +
-      geom_text(aes(x = min(middle_box_lon), y = max(middle_box_lat-0.015), label = "Middle box"),size = 5, vjust = 0, hjust = 0, color = "dark green")+
+      geom_text(aes(x = min(middle_box_lon), y = max(middle_box_lat-0.02), label = "Middle box"),size = 5, vjust = 0, hjust = 0, color = "dark green")+
     geom_rect(aes(xmin = min(outer_box_lon), xmax = max(outer_box_lon), ymin = min(outer_box_lat), ymax = max(outer_box_lat)), alpha=0.1, fill="blue") +
-        geom_text(aes(x = min(outer_box_lon), y = max(outer_box_lat-0.015), label = "Outer box"),size = 5, vjust = 0, hjust = 0, color = "dark blue")+
-  xlab("Lon (°E)") + ylab("Lat (°N)")
+        geom_text(aes(x = min(outer_box_lon), y = max(outer_box_lat-0.02), label = "Outer box"),size = 5, vjust = 0, hjust = 0, color = "dark blue") +
+   geom_point(data=dat  %>% filter(day==1),
+             aes(x = lon, y = lat), size=0.1,color="black")  +
+   xlab("Lon (°E)") + ylab("Lat (°N)")
 
 ```
 
-## Number of particles released
-We start the simulation on the 1st of February and release 10 particles per day from this day until the end of September, and follow the drift of particles until the end of the year (31st of December). (`r figs("particle_release", display = "cite")`) shows .    
+## Simulation of river particle drift
+We started the particle drift simulation on the 1st of February each year (2018, 2019, 2020) and followed the drift of particles until the end of the same year (31st of December, i.e. each year was simulated separately). We released 10 particles per day from the 1st of February until the end of September, resulting in a total of 2420 particles per year (`r figs("particle_release", display = "cite")`). The particles were released in a band from 18.538°E/69.308°N to 18.506°E/69.306°N, distributed randomly in depth from the surface and down to 5 m. We followed the drift of particles until the end of the year (31st of December). 
 
-As a first trial, this is done for 2018, but the same will be repeated for 2019, 2020 and 2021. 
-
+*As a first trial, this is done for 2018, but the same will be repeated for 2019 and 2020.*   
+*We can release the number of particles simulated in the runs once we're happy with the setup.*  
 ```{r particle_release, fig.cap = particle_release, fig.height = 4, fig.width = 7}
 num_particles_timestep<-apply(lon,1,FUN=function(x) length(x[!is.na(x)]))
 new_particles_timestep<-c(num_particles_timestep[1],diff(num_particles_timestep)) 
@@ -198,21 +237,33 @@ particledat <- data.frame(Date=dates, New = new_particles_timestep, Total = num_
 
 newp <- 
   ggplot(data=particledat, aes(x=Date,y=New)) +
-  geom_bar(stat="identity", fill ="light blue")+
+  geom_bar(stat="identity", fill = "light blue", width = 0.5)+
   ylab("New particles released per day") +
   theme_minimal() +
   theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) 
 
 allp <- 
   ggplot(data=particledat, aes(x=Date,y=Total)) +
-  geom_bar(stat="identity", fill ="light blue")+
+  geom_bar(stat="identity", fill ="light blue", width = 0.5)+
   ylab("Total number of active particles") +
   theme_minimal()+
   theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) 
 
-grid.arrange(newp,allp,ncol=2)  
+grid.arrange(newp,allp,nrow=2)  
 
 ```
+
+We used the particle tracking framework OpenDrift (opendrift.github.io) was using the OceanDrift module to model neutral particles (“dissolved”) and potentially the SedimentDrift module to model sinking particles (“particulate”)
+o	Coupled to output from IMR’s Norkyst ROMS model (June 2021 – Dec. 2021)
+o	Release particles daily in a band at the river mouth, follow for X months. 
+o	Scale the particles by the river water volume flux (from river file) 
+
+## Analyses
+How the data were analyzed, visualized....
+* Monthly distribution and extent of river water
+* Residence time of river water
+* Interannual differences
+
 
 # Results
 Cumulatively over the course of the year (February to December), the river water is distributed thorughout the study area, with highest densities over time in some local areas along the coast in the inner Malangen fjord, in addition to the release area (where all river water passes through initially, `r figs("num_particles", display = "cite")`).  

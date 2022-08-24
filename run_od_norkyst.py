@@ -15,23 +15,38 @@ from opendrift.readers import reader_ROMS_native
 #from opendrift.readers import reader_netCDF_CF_generic 
 #from opendrift.readers import reader_shape
 from opendrift.models.oceandrift import OceanDrift
+from opendrift.models.sedimentdrift import SedimentDrift
 
-o = OceanDrift(loglevel=20) #logfile='log.txt')
 
-# Define run
+#### Define run
 year = '2018'
 startDay= year + '-2-1-1'
-endDay=year + '-12-31-1'
-#endDay=year + '-3-31-1'
+#endDay=year + '-12-31-1'
+endDay=year + '-2-14-1'
 startTime = datetime.strptime(startDay, '%Y-%m-%d-%H')
 endTime = datetime.strptime(endDay, '%Y-%m-%d-%H')
 print ("Run planned from %s to %s"%(startTime,endTime))
 
-run_name = 'testing_fram'
-outfile = '/cluster/projects/nn9297k/NOLA-SIS/results/%s_%s_to_%s.nc'%(run_name,startDay,endDay)
+sinkingParticles=False
+terminalVelocity=-.001  # settling speed in m/s (.001 = 1 mm/s) 
+
+if sinkingParticles:
+    run_name = 'sinkingParticles'
+    outfile = '/cluster/projects/nn9297k/NOLA-SIS/results/%s_%sms_%s_to_%s.nc'%(run_name,terminalVelocity,startDay,endDay)
+else:
+    run_name = 'neutralParticles'
+    outfile = '/cluster/projects/nn9297k/NOLA-SIS/results/%s_%s_to_%s.nc'%(run_name,startDay,endDay)
+
 print ("Output will be stored in %s"%(outfile))
 
-####Readers
+
+if sinkingParticles:
+    o = SedimentDrift(loglevel=20) 
+else:
+    o = OceanDrift(loglevel=20) #logfile='log.txt')
+
+
+#### Readers
 
 #Find forcing files needed based on days:
 day_i = startTime
@@ -56,7 +71,7 @@ o.add_reader([reader_norkyst])
 #Adding readers "lazily"
 #o.add_readers_from_list(pattern_norkyst)
        
-#Configuration 
+#### Configuration 
 #o.set_config('general:use_auto_landmask',False) # Override default landmask
 o.set_config('general:coastline_action', 'previous') # Jump back to previous position when meeting coast
 o.set_config('drift:vertical_mixing',True) # Move particles vertically according to eddy diffusivity and buoyancy 
@@ -66,7 +81,7 @@ o.set_config('environment:fallback:sea_surface_wave_stokes_drift_x_velocity',.2)
 #o.set_config('drift:current_uncertainty',2) #Not used
 #o.set_config('drift:wind_uncertainty',2)
 
-#Seeding setup
+#### Seeding setup
 N = 10 # Number of particles
 z = np.random.uniform(-5, -0.1, N) # Particle release depth between -5 and surface
 #Seed in cone at the mouth of Måselv
@@ -81,9 +96,13 @@ for month in months:
     days = [date(startTime.year, month, day) for day in range(1, num_days+1)]
     for day in days:
         day = datetime.combine(day, datetime.min.time())
-        o.seed_cone(lon=[lon_m_outer_e, lon_m_outer_w], lat=[lat_m_outer_e, lat_m_outer_w], number=N, radius=20,time=day, origin_marker=month)
+        if sinkingParticles:
+            o.seed_cone(lon=[lon_m_outer_e, lon_m_outer_w], lat=[lat_m_outer_e, lat_m_outer_w], number=N, z=z, radius=20, time=day, origin_marker=month, terminal_velocity=terminalVelocity)
+        else:
+            o.seed_cone(lon=[lon_m_outer_e, lon_m_outer_w], lat=[lat_m_outer_e, lat_m_outer_w], number=N, z=z, radius=20, time=day, origin_marker=month)
 
-# Running model
+
+####  Running model
 o.run(time_step=3600, end_time=endTime, time_step_output=3600*24, outfile=outfile, export_buffer_length=4)
 
 # Show output
