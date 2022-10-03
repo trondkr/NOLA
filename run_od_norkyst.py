@@ -15,8 +15,7 @@ from opendrift.readers import reader_ROMS_native
 #from opendrift.readers import reader_netCDF_CF_generic 
 #from opendrift.readers import reader_shape
 from opendrift.models.oceandrift import OceanDrift
-from opendrift.models.sedimentdrift import SedimentDrift
-
+#from opendrift.models.sedimentdrift import SedimentDrift
 
 #### Define run
 year = '2018'
@@ -27,24 +26,20 @@ startTime = datetime.strptime(startDay, '%Y-%m-%d-%H')
 endTime = datetime.strptime(endDay, '%Y-%m-%d-%H')
 print ("Run planned from %s to %s"%(startTime,endTime))
 
-sinkingParticles=False
-terminalVelocity=-.001  # settling speed in m/s (.001 = 1 mm/s) 
+sinkingParticles = False
 
 if sinkingParticles:
     run_name = 'sinkingParticles'
+    terminalVelocity = -.001  # Settling speed in m/s (.001 = 1 mm/s) 
     outfile = '/cluster/projects/nn9297k/NOLA-SIS/results/%s_%sms_%s_to_%s.nc'%(run_name,terminalVelocity,startDay,endDay)
 else:
     run_name = 'neutralParticles'
+    terminalVelocity = 0  # Neutral particles
     outfile = '/cluster/projects/nn9297k/NOLA-SIS/results/%s_%s_to_%s.nc'%(run_name,startDay,endDay)
 
 print ("Output will be stored in %s"%(outfile))
 
-
-if sinkingParticles:
-    o = SedimentDrift(loglevel=20) 
-else:
-    o = OceanDrift(loglevel=20) #logfile='log.txt')
-
+o = OceanDrift(loglevel=20)
 
 #### Readers
 
@@ -75,15 +70,17 @@ o.add_reader([reader_norkyst])
 #o.set_config('general:use_auto_landmask',False) # Override default landmask
 o.set_config('general:coastline_action', 'previous') # Jump back to previous position when meeting coast
 o.set_config('drift:vertical_mixing',True) # Move particles vertically according to eddy diffusivity and buoyancy 
-o.set_config('vertical_mixing:diffusivitymodel', 'windspeed_Sundby1983') # Not necessary since vertical diffusivity is included in the Norkyst files
-o.set_config('drift:vertical_advection',True) # Move particles vertically according to vertical ocean currents
-o.set_config('environment:fallback:sea_surface_wave_stokes_drift_x_velocity',.2)
-#o.set_config('drift:current_uncertainty',2) #Not used
-#o.set_config('drift:wind_uncertainty',2)
+o.set_config('vertical_mixing:diffusivitymodel', 'windspeed_Sundby1983') # Vertical diffusivity is included in the Norkyst files, but giving unrealistic values, using this instead
+o.set_config('drift:vertical_advection',True) # Move particles vertically according to vertical ocean currents, negligable compared to vertical diffusivity
+o.set_config('drift:horizontal_diffusivity', 10) # Horizontal diffusion in m2/s, to compensate for movements not resolved by the ocean model
+
+#o.set_config('environment:fallback:sea_surface_wave_stokes_drift_x_velocity',.2) #Not used
+#o.set_config('drift:current_uncertainty',2) #Not necessary when adding horizontal_diffusivity
+#o.set_config('drift:wind_uncertainty',2) #Not necessary when adding horizontal_diffusivity
 
 #### Seeding setup
 N = 10 # Number of particles
-z = np.random.uniform(-5, -0.1, N) # Particle release depth between -5 and surface
+z = np.random.uniform(-5, -0.1, N) # Particle release depth between -5 and surface - adding depth seems to cause an error with seed_cone
 #Seed in cone at the mouth of Måselv
 lon_m_outer_e = [18.5382232] 
 lat_m_outer_e = [69.3079802] 
@@ -96,11 +93,7 @@ for month in months:
     days = [date(startTime.year, month, day) for day in range(1, num_days+1)]
     for day in days:
         day = datetime.combine(day, datetime.min.time())
-        if sinkingParticles:
-            o.seed_cone(lon=[lon_m_outer_e, lon_m_outer_w], lat=[lat_m_outer_e, lat_m_outer_w], number=N, z=z, radius=20, time=day, origin_marker=month, terminal_velocity=terminalVelocity)
-        else:
-            o.seed_cone(lon=[lon_m_outer_e, lon_m_outer_w], lat=[lat_m_outer_e, lat_m_outer_w], number=N, z=z, radius=20, time=day, origin_marker=month)
-
+        o.seed_cone(lon=[lon_m_outer_e, lon_m_outer_w], lat=[lat_m_outer_e, lat_m_outer_w], number=N, radius=20, time=day, origin_marker=month, terminal_velocity=terminalVelocity)
 
 ####  Running model
 o.run(time_step=3600, end_time=endTime, time_step_output=3600*24, outfile=outfile, export_buffer_length=4)
