@@ -26,7 +26,7 @@ startTime = datetime.strptime(startDay, '%Y-%m-%d-%H')
 endTime = datetime.strptime(endDay, '%Y-%m-%d-%H')
 print ("Run planned from %s to %s"%(startTime,endTime))
 
-sinkingParticles = False
+sinkingParticles = True
 
 if sinkingParticles:
     run_name = 'sinkingParticles'
