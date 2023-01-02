@@ -69,10 +69,10 @@ firstDayMonth=function(x)
 
 
 # Map layers
-maparea_all <- get_stamenmap(bbox = c(left = 15.7, bottom = 69.2, right = 22.8,
-                                       top = 71.4), 
-                                 zoom = 8,maptype = 'terrain-background')
-  
+maparea_all <- get_stamenmap(bbox = c(left = 15.7, bottom = 69.2, right = 21.8,
+                                      top = 70.5), 
+                             zoom = 8,maptype = 'terrain-background')
+
 maparea_zoom <- get_stamenmap(bbox = c(left = 17.7, bottom = 69.28,                                          right = 19.2, top = 69.7), 
                                 zoom = 10,maptype = 'terrain-background')
 
@@ -94,10 +94,12 @@ age_particles_day <- figs(name="age_particles_day","Age distribution of particle
 
 
 ```{r read_opendrift_output, include=FALSE}
-year <- 2018
-timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
-runs<-c("neutralParticles","sinkingParticles_-0.001ms")
+years <- c(2018,2019)
+runs<-c("neutralParticles","sinkingParticles_deactivated_-0.001ms")
 
+for(year in years){
+  timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
+  
 for(i in 1:2){
   run_name <- paste0(runs[i],"_",timespan)
   resultfile <- paste0("../results/",run_name,".nc")
@@ -114,6 +116,7 @@ for(i in 1:2){
   timesteps_days_rounded<-ceiling(timesteps_days)
 
   dates_days <- data.frame(day=timesteps_days_rounded,date=dates)
+    assign(paste0("dates_days", year), dates_days)
   
   #Extract relevant variables
   status <- ncvar_get(DriftFile, 'status')    #0=active,<0=stranded/not yet released
@@ -123,6 +126,7 @@ for(i in 1:2){
   depth <- ncvar_get(DriftFile, 'z');depth[status<0]<-NA
   age_seconds <- ncvar_get(DriftFile, 'age_seconds');age_seconds[status<0]<-NA
   age_days <- floor(age_seconds/(60*60*24))
+  bottom_depth <- ncvar_get(DriftFile, 'sea_floor_depth_below_sea_level');bottom_depth[status<0]<-NA
   
   nc_close(DriftFile)
   
@@ -142,13 +146,17 @@ for(i in 1:2){
   assign(paste0(run_name,"_dat"), dat)
   rm(resultfile, DriftFile, timesteps, days_timestep, timesteps_days, timesteps_days_rounded, release_month, status, lon, lat, depth, age_seconds, age_days, datevector)
 }
-
-num_particles_timestep <- dat %>% 
+  # The number of particles per timestep is the same for all runs
+  num_particles_timestep <- dat %>% 
   group_by(date) %>% 
   summarize(total = n_distinct(ID))  %>% 
   mutate(new = total - lag(total))   %>% 
   mutate(new = replace_na(new, 10))
   
+  assign(paste0("num_particles_timestep_", year), num_particles_timestep)
+  rm(num_particles_timestep)
+}
+
 
 ```
 
@@ -159,13 +167,18 @@ river_num <- ncvar_get(RiverFile, 'river')  # river number
 timesteps_river <- ncvar_get(RiverFile, 'river_time')  # days since 1948-01-01 00:00:00 
 dates_river <- as.Date(timesteps_river, origin="1948-01-01")
 
-transport <- ncvar_get(RiverFile, 'river_transport') #river runoff vertically integrated mass transport, units: meter3 second-1
+transport <- ncvar_get(RiverFile, 'river_transport') #river runoff vertically integrated mass transport, units: meter3 second-1 (day??)
 
-dates_sel <- which(dates_river >= min(dat$date) & dates_river <= max(dat$date))
+timespan_min <- paste0(min(years), "-02-01")
+timespan_max <- paste0(max(years), "-12-31-1")
+
+dates_sel <- which(dates_river >= timespan_min & dates_river <= timespan_max)
 
 river_sel <- 167 # Målselv
 
 transport <- transport[river_sel, dates_sel]
+transport <- transport/1000 #(convert to m3^-1000)
+
 transport <- data.frame(release_date=dates_river[dates_sel], transport=transport)
 nc_close(RiverFile)
 
@@ -174,9 +187,13 @@ rm(river_num, timesteps_river, RiverFile, dates_sel, river_sel, dates_river)
 
 ```{r scale_by_river_volume, include=FALSE}
 
-
-for(x in 1:2){
+for(year in years){
+  timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
+  num_particles_timestep <- get(paste0("num_particles_timestep_",year))
+                                
+  for(x in 1:2){
   run_name <- paste0(runs[x],"_",timespan)
+  
  # Full join doesn't work with dates  
   dat_releaseday <- get(paste0(run_name,"_dat")) %>%
     group_by(ID) %>% 
@@ -196,7 +213,7 @@ for(x in 1:2){
   assign(paste0(run_name,"_dat"), dat)
 
   }
-
+}
 
 ```
 
@@ -217,11 +234,12 @@ outer_box_lat = c(69.571701, 69.653855)
 #Set resolution 
 reso <- c(0.01,0.005)
 
-#Creating raster for full study area
+#Creating raster for full study area (note, reducing full area to remove particles that meet the borders of NorKyst)
 i<-1 
 dat <- get(paste0(runs[i],"_",timespan,"_dat"))
 
-fullRaster <- raster(resolution = reso, xmn=min(dat$lon), xmx=max(dat$lon), ymn=min(dat$lat), ymx=max(dat$lat))
+fullRaster <- raster(resolution = reso, xmn=15.7, xmx=21.8, ymn=69.2, ymx=70.5)
+
 
 localRaster <- raster(resolution = reso, xmn=min(local_box_lon), xmx=max(local_box_lon), ymn=min(local_box_lat), ymx=max(local_box_lat))
 
@@ -244,7 +262,7 @@ localRaster <- raster(resolution = reso, xmn=min(local_box_lon), xmx=max(local_b
 *	Seasonal variation (spring freshet, degree of wind mixing), spatial variation (broad vs. narrow fjord system, deep vs. shallow sill) - if we compare different systems
 
 ## Aims
-For a northern Norwegian case study site (Malangen, potentially compared with the Tana fjord), use high-resolution particle-tracking modeling to study the seasonality of river outflow and residence time of river water in the fjord to better understand the potential effect of of seasonality and high flow events for coastal darkening, river biogeochemistry and land-ocean fluxes.  
+For a northern Norwegian case study site (Malangen, potentially compared with the Tana fjord), use high-resolution particle-tracking modeling to study the seasonality of river outflow and residence time of river water in the fjord to better understand the potential effect of of seasonality and high flow events for fjord biogeochemistry.  
         
 
 # Methods
@@ -282,7 +300,7 @@ geom_curve(aes(x = max(local_box_lon)+2, y = min(local_box_lat-2), xend = min(lo
 ## Simulation of river particle drift
 We started the particle drift simulation on the 1st of February each year (2018, 2019, 2020) and followed the drift of particles until the end of the same year (31st of December, i.e. each year was simulated separately). We released 10 particles per day from the 1st of February until the end of September, resulting in a total of 2420 particles per year (`r figs("particle_release", display = "cite")`). The particles were released at the surface in a band from 18.538°E/69.308°N to 18.506°E/69.306°N (`r figs("study_area", display = "cite")`). We followed the drift of particles until the end of the year (31st of December).   
 
-To get a more detailed view of the seasonal variation in water flow, we scaled the particles by the total river water volume flux at the release day (vertically integrated mass transport, in m^3-day^ , *source?*). I.e., the particles released at a specific day was weighted by the volume flux at that day, divided by the total number of particles released that day, so that the particles represent the volume flux. In that way, particles released during the spring and summer flood period gets more weight in the analyses (`r figs("particle_release", display = "cite")`).  
+To get a more detailed view of the seasonal variation in water flow, we scaled the particles by the total river water volume flux at the release day (vertically integrated mass transport, in m^3-day^ divided by 1000 - *unit*?, *source?*). I.e., the particles released at a specific day was weighted by the volume flux at that day, divided by the total number of particles released that day, so that the particles represent the volume flux. In that way, particles released during the spring and summer flood period gets more weight in the analyses (`r figs("particle_release", display = "cite")`).  
 
 *As a first trial, this is done for 2018, but the same will be repeated for 2019.*   
 *We can increase the number of particles simulated in the runs once we're happy with the setup.*  
@@ -290,7 +308,7 @@ To get a more detailed view of the seasonal variation in water flow, we scaled t
 ```{r particle_release, fig.cap = particle_release, fig.height = 4, fig.width = 7}
 
 newp <- 
-  ggplot(data=num_particles_timestep, aes(x=date,y=new)) +
+  ggplot(data=num_particles_timestep_2018, aes(x=date,y=new)) +
   geom_bar(stat="identity", fill = "light blue", width = 0.5)+
   ylab("New particles released per day") +
   theme_minimal() +
@@ -298,7 +316,7 @@ newp <-
   ggtitle("A")
 
 allp <- 
-  ggplot(data=num_particles_timestep, aes(x=date,y=total)) +
+  ggplot(data=num_particles_timestep_2018, aes(x=date,y=total)) +
   geom_bar(stat="identity", fill ="light blue", width = 0.5)+
   ylab("Total number of active particles") +
   theme_minimal()+
@@ -318,18 +336,46 @@ grid.arrange(newp,allp,volp,ncol=3)
 
 ```
 
-To model particle drift with ocean currents, we used the open source trajectory modelling framework OpenDrift [@Dagestad2018] which was coupled offline to the Norkyst ocean model reanalysis with 160 m horizontal spatial resolution... *more info on Norkyst here*...  
+To model particle drift with ocean currents, we used the open source trajectory modelling framework OpenDrift [@Dagestad2018] which was coupled offline to the NorFjords160 ocean model reanalysis with 160 m horizontal spatial resolution... *more info on NorFjords160 here*...  
 
-We applied two different setups of the particle drift model, one setup where particles represent dissolved material and are neutrally buoyant particles (i.e. following the vertical movement of water) and one setup where particles represent particulate material (i.e. being influenced by the vertical movement of water but also sinking towards the seafloor with a certain fixed sinking speed). For the sinking particles, we **tested a sinking speed of 1 mm/s**.  
+We applied two different setups of the particle drift model, one setup where particles represent dissolved material and are neutrally buoyant (i.e. following the vertical movement of water) and one setup where particles represent particulate material and are negatively buoyant (i.e. being influenced by the vertical movement of water but also sinking towards the seafloor with a certain fixed sinking speed). For the sinking particles, we tested sinking speeds of 0.3, 0.5 and 0.8 mm/s, representing mud and sand particles with grain size 0.05-0.2 mm (references). The the resuspension threshold for sinking particles was set to 0.15 m/s (references).   
+
+```{r particle_depth, fig.cap = particle_depth, fig.height = 4, fig.width = 7}
+
+year <- 2018
+timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
+
+plotlist <- list()
+for(x in 1:2){
+  run_name <- paste0(runs[x],"_",timespan)
+  
+  plot_dep <- get(paste0(run_name,"_dat")) %>% 
+   filter(age != 0) %>%
+   group_by(date) %>% 
+   summarise(depth = mean(depth)) %>%
+    ggplot(aes(x=date,y=depth)) +
+  geom_line()+
+  #  ylim(c(-500, 0 )) +
+  ylab("Mean particle depth") +
+  theme_minimal() +
+  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
+  ggtitle(paste0(year,": ", runs[x]))
+  
+  plotlist <- append(plotlist, list(plot_dep)) 
+
+}
+grid.arrange(grobs = plotlist, ncol = 2)  
+
+```
 
 For both the neutrally buoyant and sinking particles, we used the following settings in the particle tracking simulations (*this list is more for discussion with the oceanographers, probably don't need all the detail in the manuscript...*):  
 
 * Particles that hit land move back to their previous location in the ocean
-* Particles that hit the ocean floor are still moved with the bottom currents (*we can change this so that they become deactivated.*)
 * Vertical mixing was activated so that particles move vertically to eddy diffusivity and buoyancy 
 * Vertical turbulent mixing was parameterized from wind speed (Sundby, 1983) - *this was included because the vertical diffusivity  included in the Norkyst files included some unrealistic values*
 * Vertical advection was activated so that particles are moved vertically according to vertical ocean currents *has minimal impact compared to vertical turbulent mixing and can probably be ignored*
 * Horizontal diffusivity was set to 10 m2/s
+
 
 
 
@@ -351,10 +397,10 @@ Cumulatively over the course of the year (February to December), water particles
 
 plotlist <- list()
 
+for(year in years){
+  timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
+
 for(x in 1:2){
-  if(x == 1){zlims <- c(0,500000)} else {
-    zlims <- c(0,5000000)
-  }
   run_name <- paste0(runs[x],"_",timespan)
   dat <- get(paste0(run_name,"_dat"))
   dat_sp <- SpatialPointsDataFrame(cbind(dat$lon,dat$lat), data=dat)
@@ -362,61 +408,83 @@ for(x in 1:2){
   # Counting the number of particles:
   # rasterNumParts <- rasterize(x=dat_sp[,"ID"], y=fullRaster, fun="count")
   # rasterNumParts <- as.data.frame(rasterNumParts , xy=T, na.rm=T)
+  #rasterNumParts$Number <- rasterNumParts$ID
  
   # Summing the volume of particles:
   rasterNumParts <- rasterize(x=dat_sp[,"vol_particle"], y=fullRaster, fun="sum")
   rasterNumParts <- as.data.frame(rasterNumParts , xy=T, na.rm=T)
-  maxval <- max(rasterNumParts$ID)
-    
+  rasterNumParts$Number <- rasterNumParts$vol_particle
+  
+ maxval <- max(rasterNumParts$Number)
+
+ if(x == 1){zlims <- c(0,10)} else {
+    zlims <- c(0,10)
+  }
+ 
   fullmap <- ggmap(maparea_all) + 
-    geom_raster(data = rasterNumParts, aes(x = x, y = y, fill=ID), interpolate = TRUE) +
+    geom_raster(data = rasterNumParts, aes(x = x, y = y, fill=Number), interpolate = TRUE) +
     scale_fill_gradientn(limits = zlims,
                          na.value = "red", #na.value color same as color for max value
-                         colours = c("purple","blue", "green","yellow","orange","red"),
-                         name="Number") +
+                         colours = c("purple","blue", "green","yellow","orange","red")) +
     coord_cartesian() +
     #scale_fill_gradientn(colours=topo.colors(500, alpha=0.4), name="Number") +
-    xlab("Lon (°E)") + ylab("Lat (°N)") +
     geom_rect(aes(xmin = 17.7, xmax = 19.2, ymin =
         min(rasterNumParts$y), ymax = 69.7), color="black",fill=NA) + 
-    ggtitle(paste0(year,": ", runs[x],"\nMax: ", maxval)) +
-    theme(plot.margin = unit(rep(.5, 4), "lines"))
+    ggtitle(paste0(year,": ", runs[x],"\nMax: ", round(maxval))) +
+    theme(plot.margin = unit(rep(.5, 4), "lines"),
+          axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
 
   zoommap <- ggmap(maparea_zoom) + 
-    geom_raster(data = rasterNumParts, aes(x = x, y = y, fill=ID), interpolate = TRUE) +
+    geom_raster(data = rasterNumParts, aes(x = x, y = y, fill=Number), interpolate = TRUE) +
     coord_cartesian() +
     scale_fill_gradientn(limits = zlims,
                          na.value = "red", #na.value color same as color for max value
-                         colours = c("purple","blue", "green","yellow","orange","red"),
-                         name="Number") +
+                         colours = c("purple","blue", "green","yellow","orange","red")) +
     xlab("Lon (°E)") + ylab("Lat (°N)") +
-    theme(plot.margin = unit(rep(.5, 4), "lines"))
+    theme(plot.margin = unit(rep(.5, 4), "lines"),
+          axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
 
 plotlist <- append(plotlist, list(fullmap, zoommap)) 
   
+rm(dat)
+}
 }
 
-grid.arrange(grobs = plotlist, layout_matrix = matrix(c(1,2,3,4),nrow=4,byrow=FALSE))
+grid.arrange(grobs = plotlist, layout_matrix = matrix(c(1:4),nrow=2,byrow=FALSE))
+
+# grid.arrange(grobs = plotlist, layout_matrix = matrix(c(1:8),nrow=4,byrow=FALSE))
 
 
 ```
   
 `r figs("num_particles_day", display = "cite")` shows the distribution of particles at the first day of each month of the simulation.  
 
-```{r num_particles_day, fig.cap = num_particles_day, fig.height = 11, fig.width = 9}
+```{r num_particles_day, fig.cap = num_particles_day, fig.height = 12, fig.width = 9}
 
 
 plotlist <- list()
 
+for(year in years){
+  timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
+
 for(x in 1:2){
-  if(x == 1){zlims <- c(0,1000)} else {
-    zlims <- c(0,50000)
+  if(x == 1){zlims <- c(0,3000)} else {
+    zlims <- c(0,10000)
   }
   run_name <- paste0(runs[x],"_",timespan)
   dat <- get(paste0(run_name,"_dat"))
   dat_sp <- SpatialPointsDataFrame(cbind(dat$lon,dat$lat), data=dat)
   days <- firstDayMonth(unique(dat_sp$date))[seq(2,10,by=2)]
-
 
   for(i in 1:length(days)){
     dat_i <- dat_sp[dat_sp$date==days[i],]
@@ -458,17 +526,20 @@ for(x in 1:2){
     coord_cartesian() +
     scale_fill_gradientn(limits = zlims,
                          na.value = "red", #na.value color same as color for max value
-                         colours = c("purple","blue", "green","yellow","orange","red"), name="Number") +
-    theme(legend.direction = "horizontal") 
+                         colours = c("purple","blue", "green","yellow","orange","red"), name="Number") #+
+ #   theme(legend.direction = "horizontal") 
 
   legend <- cowplot::get_legend(lastplot)
   plotlist <- append(plotlist, list(legend))
   
   #do.call("grid.arrange", c(plotlist, ncol=3,heights=unit(rep(5,3), "in")))
 }
+}
 
-grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:12),ncol=2,byrow=FALSE),
-             top=textGrob("Neutral              Sinking"))
+grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:12),nrow=2,byrow=TRUE))
+
+# grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:24),ncol=4,byrow=FALSE),
+#              top=textGrob("Neutral   Sinking   Neutral  Sinking"))
 
 ```
 
@@ -479,13 +550,17 @@ grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:12),ncol=2,byrow=FALSE),
 ```{r num_particles_box, fig.cap = num_particles_box, fig.height = 8, fig.width = 9}
 
 plotlist <- list()
-xlims<-(c(min(dat$date),max(dat$date)))
   
- 
 for(x in 1:2){
- dat <- get(paste0(runs[x],"_",timespan,"_dat"))
- if(x==1){ ylims <- c(0,550)} else {
-   ylims <- c(0,2000)
+for(year in years[1]){
+  timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
+  dat <- get(paste0(runs[x],"_",timespan,"_dat"))
+  xlims<-(c(min(dat$date),max(dat$date)))
+  dates_days <- get(paste0("dates_days",year))
+ 
+  if(x==1){ ylims <- c(0,700)} else {
+   #ylims <- c(0,2000)
+   ylims <- c(0,700)
  }
 
  for(i in c("local","inner","middle","outer")){
@@ -495,49 +570,53 @@ for(x in 1:2){
   counts_i <- dat %>% 
     filter(lon>min(lon_i) & lon<max(lon_i)) %>% 
     filter(lat>min(lat_i) & lat<max(lat_i)) %>% 
-    group_by(day, origin) %>% 
+    group_by(day, release_month) %>% 
     tally() %>% 
     left_join(dates_days)  %>% 
-    rename(Month = origin, Date = date)
+    rename(Month = release_month, Date = date) %>% 
+    mutate(Month = factor(Month, 
+                             levels = as.character(seq(2,9))))
   
   plot_i <- ggplot(data=counts_i, aes(x=Date,y=n,fill=Month)) +
                  geom_bar(stat="identity") +
                  xlim(xlims) + ylim(ylims)+
-                 xlab("") +
-                 ylab("Number of particles") +
-                 ggtitle(paste0(i," box"))  +
-                 theme_minimal() + theme(legend.position = "null")
-  
-  if(i == "local" & x ==1){
-  plot_legend <- ggplot(data=counts_i, aes(x=Date,y=n,fill=Month)) +
-                 geom_bar(stat="identity") +
-                 xlim(xlims) + ylim(ylims)+
-                 xlab("") +
-                 ylab("") +
-                 ggtitle(paste0(i," box"))  +
-                 theme_minimal() +
-    theme(legend.direction = "horizontal") 
-
-  plot_legend <- cowplot::get_legend(plot_legend)
-  }
-  
+                ggtitle(paste0(year," ",i," box"))  +
+                 theme_minimal() + theme(legend.position = "null",
+                                        axis.text.x=element_text(angle=90,hjust=1,vjust=0.5),
+        axis.title.x=element_blank(),
+          axis.title.y=element_blank())
   
   plotlist <- append(plotlist, list(plot_i))
- }
+    }
+  }
 }
  
-plotlist <- plotlist[-8]
-plotlist <- append(plotlist, list(plot_legend))
+# Add legend to last plot
+plot_legend <- ggplot(data=counts_i, aes(x=Date,y=n,fill=Month)) +
+                 geom_bar(stat="identity") +
+                 xlim(xlims) + ylim(ylims)+
+                ggtitle(paste0(year," ",i," box"))  +
+                 theme_minimal() + theme(legend.direction = "horizontal",
+         legend.position = c(0.7,0.8),
+         axis.text.x=element_text(angle=90,hjust=1,vjust=0.5),
+        axis.title.x=element_blank(),
+          axis.title.y=element_blank())
+  
+                
+plotlist[[length(plotlist)]] <- plot_legend
  
-grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:8),ncol=2,byrow=FALSE),
-             top=textGrob("Neutral              Sinking"), left=textGrob("Number of particles", rot=90))
+grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:8),ncol=4,byrow=TRUE),
+            left=textGrob("Number of particles", rot=90))
+
+# grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:16),ncol=4,byrow=FALSE),
+#              top=textGrob("Neutral              Sinking"), left=textGrob("Number of particles", rot=90))
 
 
 ```
 
 `r figs("age_particles_day", display = "cite")` shows the mean age of particles at the first day of each month of the simulation.  
 
-```{r age_particles_day, fig.cap = age_particles_day, fig.height = 11, fig.width = 9}
+```{r age_particles_day, fig.cap = age_particles_day, fig.height = 11, fig.width = 9,eval=FALSE}
 
 days <- firstDayMonth(unique(dat_sp$date))[seq(2,10,by=2)]
 
@@ -589,8 +668,6 @@ for(x in 1:2){
   legend <- cowplot::get_legend(lastplot)
   plotlist <- append(plotlist, list(legend))
 }
-
-  
 
 
 grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:12),ncol=2,byrow=FALSE),

@@ -15,31 +15,31 @@ from opendrift.readers import reader_ROMS_native
 #from opendrift.readers import reader_netCDF_CF_generic 
 #from opendrift.readers import reader_shape
 from opendrift.models.oceandrift import OceanDrift
-#from opendrift.models.sedimentdrift import SedimentDrift
+from opendrift.models.sedimentdrift import SedimentDrift
 
 #### Define run
 year = '2018'
 startDay= year + '-2-1-1'
-#endDay=year + '-12-31-1'
-endDay=year + '-2-14-1'
+endDay=year + '-12-31-1'
+#endDay=year + '-2-14-1'
 startTime = datetime.strptime(startDay, '%Y-%m-%d-%H')
 endTime = datetime.strptime(endDay, '%Y-%m-%d-%H')
 print ("Run planned from %s to %s"%(startTime,endTime))
 
-sinkingParticles = True
+sinkingParticles = False
 
 if sinkingParticles:
     run_name = 'sinkingParticles'
-    terminalVelocity = -.001  # Settling speed in m/s (.001 = 1 mm/s) 
-    outfile = '/cluster/projects/nn9297k/NOLA-SIS/results/%s_%sms_%s_to_%s.nc'%(run_name,terminalVelocity,startDay,endDay)
+    terminalVelocity = -.0003  # Settling speed in m/s (.001 = 1 mm/s) 
+    outfile = '/cluster/projects/nn8103k/NOLA/results/%s_%sms_%s_to_%s.nc'%(run_name,terminalVelocity,startDay,endDay)
+    o = SedimentDrift(loglevel=20)
 else:
     run_name = 'neutralParticles'
     terminalVelocity = 0  # Neutral particles
-    outfile = '/cluster/projects/nn9297k/NOLA-SIS/results/%s_%s_to_%s.nc'%(run_name,startDay,endDay)
+    outfile = '/cluster/projects/nn8103k/NOLA/results/%s_%s_to_%s.nc'%(run_name,startDay,endDay)
+    o = OceanDrift(loglevel=20)
 
 print ("Output will be stored in %s"%(outfile))
-
-o = OceanDrift(loglevel=20)
 
 #### Readers
 
@@ -73,13 +73,17 @@ o.set_config('drift:vertical_mixing',True) # Move particles vertically according
 o.set_config('vertical_mixing:diffusivitymodel', 'windspeed_Sundby1983') # Vertical diffusivity is included in the Norkyst files, but giving unrealistic values, using this instead
 o.set_config('drift:vertical_advection',True) # Move particles vertically according to vertical ocean currents, negligable compared to vertical diffusivity
 o.set_config('drift:horizontal_diffusivity', 10) # Horizontal diffusion in m2/s, to compensate for movements not resolved by the ocean model
+o.set_config('vertical_mixing:resuspension_threshold', .15) # 0.2 is now set to default
+o.set_config('general:seafloor_action', 'previous') # Deactivate: Particles that hit the seafloor are deactivated. Can only happen with sinking. 
+#'lift_to_seafloor': particles is moved with current direction and upward to shallower sea 
+# 'previous': kept at seafloor, cannot move if meeting shallower area.
 
 #o.set_config('environment:fallback:sea_surface_wave_stokes_drift_x_velocity',.2) #Not used
 #o.set_config('drift:current_uncertainty',2) #Not necessary when adding horizontal_diffusivity
 #o.set_config('drift:wind_uncertainty',2) #Not necessary when adding horizontal_diffusivity
 
 #### Seeding setup
-N = 10 # Number of particles
+N = 100 # Number of particles
 z = np.random.uniform(-5, -0.1, N) # Particle release depth between -5 and surface - adding depth seems to cause an error with seed_cone
 #Seed in cone at the mouth of Måselv
 lon_m_outer_e = [18.5382232] 
