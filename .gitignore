@@ -133,7 +133,6 @@ dep_env/
 dep_env.yml
 slurm*
 *.nc
-*.sh
 Glomma_particles/
 
 # R markdown stuff
