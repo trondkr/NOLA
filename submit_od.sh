@@ -59,7 +59,7 @@ echo 1+1
 ## For IntelMPI (intel toolchain), mpirun is recommended:
 #time mpirun MySoftWare-exec
 
-time python run_od_norkyst.py
+time /cluster/projects/nn8103k/NIVA-NOLA/opendrift_latest.sif python run_od_norkyst.py
 
 #########################################################
 # That was about all this time; lets call it a day...
