@@ -21,12 +21,12 @@ from opendrift.models.sedimentdrift import SedimentDrift
 year = '2018'
 startDay= year + '-2-1-1'
 endDay=year + '-12-31-1'
-endDay=year + '-2-2-1'
+#endDay=year + '-2-2-1'
 startTime = datetime.strptime(startDay, '%Y-%m-%d-%H')
 endTime = datetime.strptime(endDay, '%Y-%m-%d-%H')
 print ("Run planned from %s to %s"%(startTime,endTime))
 
-sinkingParticles = False
+sinkingParticles = True
 
 if sinkingParticles:
     run_name = 'sinkingParticles'
@@ -77,8 +77,6 @@ o.set_config('general:seafloor_action', 'previous') # Deactivate: Particles that
 
 if sinkingParticles:
     o.set_config('vertical_mixing:resuspension_threshold', .15) # 0.2 is now set to default
-
-
 
 #'lift_to_seafloor': particles is moved with current direction and upward to shallower sea 
 # 'previous': kept at seafloor, cannot move if meeting shallower area.

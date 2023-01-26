@@ -14,7 +14,7 @@
 #SBATCH --ntasks-per-node=32
 ## No memory pr task since this option is turned off on Fram in partition normal.
 ## Run for x time, syntax is d-hh:mm:ss
-#SBATCH --time=7-00:00:00 
+#SBATCH --time=5-00:00:00  
 
 # you may not place bash commands before the last SBATCH directive
 ######################################################
