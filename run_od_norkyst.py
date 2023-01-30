@@ -18,7 +18,7 @@ from opendrift.models.oceandrift import OceanDrift
 from opendrift.models.sedimentdrift import SedimentDrift
 
 #### Define run
-year = '2018'
+year = '2019'
 startDay= year + '-2-1-1'
 endDay=year + '-12-31-1'
 #endDay=year + '-2-2-1'
