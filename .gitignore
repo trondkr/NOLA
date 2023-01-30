@@ -131,7 +131,6 @@ dmypy.json
 # NOLA Opendrift+FVCOM stuff
 dep_env/
 dep_env.yml
-slurm*
 *.nc
 Glomma_particles/
 

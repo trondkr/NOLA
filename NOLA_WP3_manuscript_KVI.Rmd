@@ -32,7 +32,7 @@ institute:
   - NIVA: Norwegian Institute for Water Research, Oslo, Norway
   - apn: Akvaplan-Niva AS, Oslo, Norway
   - IMR: Institute of Marine Research, Bergen, Norway
-abstract: "**Abstract**: *Introduction:* Climate change effects on freshwater fluxes in coastal ecosystems. *Method*: Particle tracking runs to simulate material origating from the river (dissoved or particulate), following the fate of material released at the Målselv river mouth into the Malangen fjord and eventually entering the Norwegian Sea. *Results*: Seasonal and interannual variation in residence time of river material, spatial extent of river material. Differences between dissolved (neutral) and particulate (sinking) material. *Discussion*: Inputs from rivers to coast, potential ecological effects (light and nutrient availability, stratification)."
+abstract: "**Abstract**: *Introduction:* Climate change effects on freshwater fluxes in coastal ecosystems. *Method*: Particle tracking runs to simulate material originating from the river (dissolved or particulate), following the fate of material released at the Målselv river mouth into the Malangen fjord and eventually entering the Norwegian Sea. *Results*: Seasonal and interannual variation in residence time of river material, spatial extent of river material. Differences between dissolved (neutral) and particulate (sinking) material. *Discussion*: Inputs from rivers to coast, potential ecological effects (light and nutrient availability, stratification)."
 editor_options: 
   chunk_output_type: console
   always_allow_html: true
@@ -47,7 +47,6 @@ knitr::opts_chunk$set(fig.retina = 1)
 setwd("C:/NOLA-SIS_lokal/NOLA")
 
 # libraries
-#library(ncdf)
 library(ncdf4)
 library(maps)
 library(mapdata)
@@ -85,20 +84,21 @@ maparea_zoom <- get_stamenmap(bbox = c(left = 17.7, bottom = 69.28,             
 figs <- captioner(prefix="Figure")
 
 
-study_area <- figs(name="study_area","Study area. The black points show the particle release area at the mouth of the Målselv river. The colored boxes show the limits of four areas used to quantify the distribution of river material.")
+study_area <- figs(name="study_area","Study area. The black points show the particle release area at the mouth of the Målselv river. The colored boxes and dashed line show the limits of subareas used to quantify the distribution of river material (Outside: north of the Outer box).")
 
-particle_release <- figs(name="particle_release","Number of particles released per day (A), the cumulative number of particles during the run (B), and the river volume flux per date for 2018 (C) and 2019 (D). Panels A and B are illustrated for one year, but the setup is the same for both years.")
+particle_release <- figs(name="particle_release","Number of particles released per day (A), the cumulative number of particles during the run (B), and the river volume flux per date for 2018 (C) and 2019 (D). The released particles (A) were scaled by the river volume flux (C, D) to represent amount of river material. Panels A and B are illustrated for one year, but the setup is the same for both years.")
 
-num_particles <- figs(name="num_particles","Cumulative distribution of river material during the simulation for one year (counting all particles that have passed through a grid cell, with particles weighted by river water volume flux at the day of release). The top panels show the full distribution and the lower panels a zoomed-in view of the Malangen system (indicated with a black rectangle in the upper panel). Runs for two years with neutrally buoyant or sinking particles are compared. Note that the color scale has been truncated to maximum 15 000 for all panels to facilitate visualization and comparison (the maximum value for a single grid cell is indicated in the title).")
+particle_depth <- figs(name="particle_depth","Mean depth of particles per day throughout the different runs (not weighted by water volume at day of release), with 25 % and 75 % percentiles of the data indicated as grey shading.")
 
-num_particles_day <- figs(name="num_particles_day","Distribution of river water material in the study area at the first day of every 2nd month during the simulation (counting all particles that are in a grid cell that day, weighting particles by river water volume flux at the day of release). Runs with neutrally buoyant and sinking particles are compared, the color scales differ between the runs. Note that the color scale has been truncated to a fixed number to allow visualization (the maximum value for a single for a single grid cell is indicated per panel).")
+num_particles <- figs(name="num_particles","Cumulative distribution of river material during the simulation for one year (counting all particles that have passed through a grid cell, with particles weighted by river water volume flux at the day of release). The top panels show the full distribution and the lower panels a zoomed-in view of the Malangen system (indicated with a black rectangle in the upper panel). Runs for two years with neutrally buoyant or sinking particles are compared. Note that the color scale has been truncated to a maximum of 15 000 for all panels to facilitate visualization and comparison (the maximum value for a single grid cell is indicated in the title).")
 
-num_particles_box <- figs(name="num_particles_box","Number of particles present within each subregion of the study area per day during the simulation, color-coded by release month. Note, the different colors do not overlap but are stacked vertically. Also note that the y-axis differ for the neutrally buoyant and sinking particles.")
+num_particles_day <- figs(name="num_particles_day","Distribution of river water material in the study area at the first day of every 2nd month during the simulation (counting all particles that are in a grid cell that day, weighting particles by river water volume flux at the day of release). Runs with neutrally buoyant and sinking particles are compared (different columns). Note that the color scale has been truncated to a maximum of 100 to allow comparison and visualization (the maximum value for a single for a single grid cell is indicated per panel).")
 
-residence_time_box <- figs(name="residence_time_box","Residence time of particles in each box (in number of days) as a function of total volume flux at the time of particle release (5-days moving averarge counting from the day of release). The grey points are number of days for individual particles, thre green line shows the average residence time per value of total volume flux, and the black line show the relationship between residence time and total volume flux as a smooth function from a GAM with maximum 4 knots. Note that the y-axis differ between panels.")
+num_particles_box <- figs(name="num_particles_box","Sum of material (number of particles weighted by volume) present within each subregion of the study area per day during the simulation, color-coded by release month. Note, the different colors do not overlap but are stacked vertically.")
+
+residence_time_box <- figs(name="residence_time_box","Residence time of particles in each box (in number of days) as a function of total volume flux at the time of particle release (5-days moving average counting from the day of release). Note that this may also include particles that exit a box and then re-enters at a later point in time. The grey points are number of days for individual particles (not weighted by water volume) and the black line show the relationship between residence time and total volume flux as a smooth function from a GAM (y ~ s(x, bs = 'cs')).")
 
 age_particles_day <- figs(name="age_particles_day","Age distribution of particles at the first day of every 2nd month during the simulation (calculating the mean age for all particles that are in a grid cell that day). Note that all values over 250 are diplayed in the same color (maximum outlier value was 302).")
-
 
 
 ```
@@ -237,11 +237,13 @@ local_box_lat = c(69.304173, 69.357645)
 inner_box_lon = c(18.349934, 19.000649)
 inner_box_lat = c(69.257388, 69.438920)
 
-middle_box_lon = c(17.823399, 18.718452)
-middle_box_lat = c(69.438921, 69.571700)
+outer_box_lon = c(17.823399, 18.718452)
+outer_box_lat = c(69.438921, 69.571700)
 
-outer_box_lon = c(17.308940, 18.135973)
-outer_box_lat = c(69.571701, 69.71448)
+# outer_box_lon = c(17.308940, 18.135973)
+# outer_box_lat = c(69.571701, 69.71448)
+
+outside_lat <-  69.571701
 
 #Set resolution 
 reso <- c(0.01,0.005)
@@ -260,26 +262,26 @@ localRaster <- raster(resolution = reso, xmn=min(local_box_lon), xmx=max(local_b
 
 
 # Introduction
-
-* Broad climate change context for the global north and for Northern Norway 
-    + Shifts in hydrology (freshwater fluxes, seasonality, frequency of high flow events) 
-    + Coastal darkening
 *	Importance of rivers for transport of nutrients/C/particles to the sea
+* Broad climate change context for the global north and for Northern Norway 
+    + Climate change is causing increased precipitation and more frequent high flow events, which lead to increased runoff to coastal waters. 
+    + Increased runoff can lead to coastal darkening, due to increased input of dissolved and suspended material that absorbs and scatters light (e.g. ...). 
+    + In addition, runoff from land bring nutrients that can support increased phytoplankton production, which again may reduce light availability at the seafloor. 
+    + Documented darkening of Norwegian coastal waters
 *	Difference between dissolved (e.g. nutrients) and particulate (e.g. sediment particles) matter in behavior, residence time…
-*	Potential impacts on coastal ecosystems (light availability, nutrient availability, stratification)
 *	Importance of residence time for the effect of river water in fjord systems
 *	If the residence time is very short, does the river output matter?
 *	Importance of spatial extent – how far does the river output reach? 
-*	Seasonal variation (spring freshet, degree of wind mixing), spatial variation (broad vs. narrow fjord system, deep vs. shallow sill) - if we compare different systems
+*	Seasonal variation (spring freshet, degree of wind mixing)
 
 ## Aims
-For a northern Norwegian case study site (Malangen, potentially compared with the Tana fjord), use high-resolution particle-tracking modeling to study the seasonality of river outflow and residence time of river water in the fjord to better understand the potential effect of of seasonality and high flow events for fjord biogeochemistry.  
+For a northern Norwegian case study site (Malangen, potentially compared with the Tana fjord), use high-resolution particle-tracking modeling to study the seasonality of river outflow and residence time of river water in the fjord to better understand the potential effect of seasonality and high flow events for fjord biogeochemistry and coastal darkening.  
         
 
 # Methods
 
 ## Study area
-The study area encompasses the mouth of the Målselv river in Northern Norway and the downstream Malangen fjord that can transport river water out into the Norwegian Sea (`r figs("study_area", display = "cite")`). The study area was divided into four boxes at varying distance from the river mouth to study the flux of river water and residence time.  
+The study area encompasses the mouth of the Målselv river in Northern Norway and the downstream Malangen fjord that can transport river water out into the Norwegian Sea (`r figs("study_area", display = "cite")`). The study area was divided into different subareas at varying distance from the river mouth to study the flux of river water and residence time.  
 
 ```{r study_area, fig.cap = study_area, fig.height = 4, fig.width = 7}
 #Plot distribution at release
@@ -292,10 +294,10 @@ ggmap(maparea_study) +
   geom_text(aes(x = min(local_box_lon), y = max(local_box_lat-0.02), label = "Local box"),size = 4, vjust = 0, hjust = 0)+
   geom_rect(aes(xmin = min(inner_box_lon), xmax = max(inner_box_lon), ymin = min(inner_box_lat), ymax = max(inner_box_lat)), alpha=0.1, fill="orange") +
     geom_text(aes(x = min(inner_box_lon), y = max(inner_box_lat-0.02), label = "Inner box"),size = 4, vjust = 0, hjust = 0)+
-    geom_rect(aes(xmin = min(middle_box_lon), xmax = max(middle_box_lon), ymin = min(middle_box_lat), ymax = max(middle_box_lat)), alpha=0.1, fill="green") +
-      geom_text(aes(x = min(middle_box_lon), y = max(middle_box_lat-0.02), label = "Middle box"),size = 4, vjust = 0, hjust = 0)+
     geom_rect(aes(xmin = min(outer_box_lon), xmax = max(outer_box_lon), ymin = min(outer_box_lat), ymax = max(outer_box_lat)), alpha=0.1, fill="blue") +
         geom_text(aes(x = min(outer_box_lon), y = max(outer_box_lat-0.02), label = "Outer box"),size = 4, vjust = 0, hjust = 0) +
+   geom_hline(yintercept= outside_lat, linetype="dashed") +
+        geom_text(aes(x = min(outer_box_lon)-0.1, y = outside_lat+0.01, label = "Outside"),size = 4, vjust = 0, hjust = 0)+
    geom_point(data=dat  %>% filter(day==1),
              aes(x = lon, y = lat), size=0.1,color="black")  +
   geom_text(aes(x = max(local_box_lon), y = min(local_box_lat-0.04), label = "Release area"),size = 4, vjust = 0, hjust = 0) +
@@ -308,7 +310,7 @@ geom_curve(aes(x = max(local_box_lon)+2, y = min(local_box_lat-2), xend = min(lo
 ```
 
 ## Simulating drift of material from river to ocean
-We released particles in a band from 18.538°E/69.308°N to 18.506°E/69.306°N following river mouth of the Målselv river (`r figs("study_area", display = "cite")`). The particles were distributed randomly at depths between 0 and 5 m. We started the particle drift simulation on the 1st of February for each of two years (2018, 2019) and followed the drift of particles until the end of the same year (31st of December, i.e. each year was simulated separately). We released 100 particles per day from the 1^st^ of February until the end of September, i.e., a total of 24 200 particles per year (`r figs("particle_release", display = "cite")`).   
+We released particles in a band from 18.538°E/69.308°N to 18.506°E/69.306°N following river mouth of the Målselv river (`r figs("study_area", display = "cite")`). The particles were distributed randomly at depths between 0 and 5 m. We started the particle drift simulation on the 1st of February for each of two years (2018, 2019) and followed the drift of particles until the end of the same year (31st of December, i.e., each year was simulated separately). We released 100 particles per day from the 1^st^ of February until the end of September, i.e., a total of 24 200 particles per year (`r figs("particle_release", display = "cite")`).   
 
 To get a more realistic representation of the seasonal variation in outflow of river material, we scaled the particles by the total river water volume flux at the release day (vertically integrated mass transport, in m^3-day^ *Jon: correct unit*?, *source?*). I.e., the particles released at a specific day were weighted by the volume flux at that day, divided by the total number of particles released that day. In that way, particles released during the spring and summer flood period gets more weight in the analyses and the "amount" represented by the particles reflect the volume flux (`r figs("particle_release", display = "cite")`).  
 
@@ -335,6 +337,7 @@ volp2018 <- ggplot(data=transport  %>%
                      filter(release_date<"2019-01-01"),
                    aes(x=release_date,y=transport)) +
   geom_bar(stat="identity", fill ="light blue", width = 0.5) +
+  ylim(c(0,940)) +
   ylab("Total vol. flux (m3/d)") +
   theme_minimal()+
   theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
@@ -343,6 +346,7 @@ volp2018 <- ggplot(data=transport  %>%
 volp2019 <- ggplot(data=transport  %>%
                      filter(release_date>="2019-01-01"), aes(x=release_date,y=transport)) +
   geom_bar(stat="identity", fill ="light blue", width = 0.5) +
+  ylim(c(0,940)) +
   ylab("Total vol. flux (m3/d)") +
   theme_minimal()+
   theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
@@ -352,37 +356,9 @@ grid.arrange(newp, allp, volp2018, volp2019, ncol=2)
 
 ```
 
-To model particle drift with ocean currents, we used the open source trajectory modelling framework OpenDrift [@Dagestad2018] which was coupled offline to the NorFjords160 ocean model reanalysis with 160 m horizontal spatial resolution... *Jon: more info on NorFjords160 here*...  
+To model particle drift with ocean currents, we used the open-source trajectory modelling framework OpenDrift [@Dagestad2018] which was coupled offline to the NorFjords160 ocean model reanalysis with 160 m horizontal spatial resolution... *Jon: more info on NorFjords160 here*...  
 
-We applied two different setups of the particle drift model, one setup where particles represent dissolved material and are neutrally buoyant (i.e. following the vertical movement of water) and one setup where particles represent particulate material and are negatively buoyant (i.e. being influenced by the vertical movement of water but also sinking towards the seafloor with a certain speed). For sinking particles, we tested sinking speeds of 0.3, 0.5 and 0.8 mm/s, representing mud and sand particles with grain size 0.05-0.2 mm (*references Mike?*). The resuspension threshold for sinking particles was set to 0.15 m/s (*references or more info Mike?*).   
-
-```{r particle_depth, fig.cap = particle_depth, fig.height = 4, fig.width = 7, eval = FALSE}
-
-year <- 2018
-timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
-
-plotlist <- list()
-for(x in 1:2){
-  run_name <- paste0(runs[x],"_",timespan)
-  
-  plot_dep <- get(paste0(run_name,"_dat")) %>% 
-   filter(age != 0) %>%
-   group_by(date) %>% 
-   summarise(depth = mean(depth)) %>%
-    ggplot(aes(x=date,y=depth)) +
-  geom_line()+
-  ylim(c(-80, 0 )) +
-  ylab("Mean particle depth") +
-  theme_minimal() +
-  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
-  ggtitle(paste0(year,": ", runs[x]))
-  
-  plotlist <- append(plotlist, list(plot_dep)) 
-
-}
-grid.arrange(grobs = plotlist, ncol = 2)  
-
-```
+We applied two different setups of the particle drift model, one setup where particles represent dissolved material and are neutrally buoyant (i.e., following the vertical movement of water) and one setup where particles represent particulate material and are negatively buoyant (i.e., being influenced by the vertical movement of water but also sinking towards the seafloor with a certain speed). For sinking particles, we tested sinking speeds of 0.3, 0.5 and 0.8 mm/s, representing mud and sand particles with grain size 0.05-0.2 mm (*references, Mike? for now I have only tested 0.3*). The resuspension threshold for sinking particles was set to 0.15 m/s (*references or more info, Mike?*).  
 
 For both the neutrally buoyant and sinking particles, we used the following settings in the particle tracking simulations (*this list is more for our own reference , we probably don't need all the detail in the manuscript...*):  
 
@@ -390,8 +366,43 @@ For both the neutrally buoyant and sinking particles, we used the following sett
 * Vertical mixing was activated so that particles move vertically according to eddy diffusivity and buoyancy 
 * Vertical turbulent mixing was parameterized from wind speed (Sundby, 1983) - *this was included because the vertical diffusivity  included in the Norkyst files included some unrealistic values*
 * Vertical advection was activated so that particles are moved vertically according to vertical ocean currents *has minimal impact compared to vertical turbulent mixing and could probably be ignored. Kept for now*
-* Horizontal diffusivity was set to 10 m2/s
+* Horizontal diffusivity was set to 10 m2/s  
 
+
+`r figs("particle_depth", display = "cite")` shows the mean depth of particles in the different runs (neutral vs. 0.3 mm/s sinking speed). Although sinking particles quickly reach a deeper mean depth than neutrally buoyant particles, sinking particles tend to stay in the upper 100 m and are never deactivated (*why is it so?*).  
+
+```{r particle_depth, fig.cap = particle_depth, fig.height = 4, fig.width = 7}
+
+plotlist <- list()
+
+for(year in years){
+  timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
+
+  for(x in 1:2){
+    run_name <- paste0(runs[x],"_",timespan)
+    
+    plot_dep <- get(paste0(run_name,"_dat")) %>% 
+      filter(age != 0) %>%
+    ggplot(aes(x=date, y=depth))+ 
+    #stat_summary(geom="ribbon", fun.data=mean_cl_normal, fill="grey")+
+   stat_summary(geom="ribbon", fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), fill = "light grey") + 
+    stat_summary(geom="line", fun=mean)+
+    coord_cartesian(ylim = c(-90, -10)) +  
+    theme_minimal() +
+    theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
+    ggtitle(paste0(year,": ", str_to_sentence(gsub("\\P.*","",runs[x]))))
+
+    if(x == 1){
+    plot_dep <- plot_dep + ylab("Mean particle depth") 
+    }
+
+    plotlist <- append(plotlist, list(plot_dep)) 
+  }
+}
+
+grid.arrange(grobs = plotlist, ncol = 2)  
+
+```
 
 
 
@@ -405,14 +416,15 @@ Description of how the data were analyzed, visualized....
 
 
 # Results
-Cumulatively over the course of the year (February to December), material originating from the Målselv river is distributed thorughout the Malangen fjord system, into the Norwegian Sea and north along the Norwegian coast (`r figs("num_particles", display = "cite")`). The highest concentration of material or volume of water originating from the river is found in some local areas along the coast in the inner Malangen fjord, in addition to the release area (where all river water passes through initially, `r figs("num_particles", display = "cite")`). Comparing neutrally buyoant and sinking particles...
+Cumulatively over the course of the year (February to December), material originating from the Målselv river is distributed throughout the Malangen fjord system, into the Norwegian Sea and north along the Norwegian coast (`r figs("num_particles", display = "cite")`). The highest concentration of material originating from the river is found locally along the eastern coast of inner fjord area, in addition to within the release area (where all river water passes through initially, `r figs("num_particles", display = "cite")`). Comparing neutrally buoyant and sinking material, a higher fraction of the sinking material is kept within the inner fjord system, while much of the neutrally buoyant material is spread throughout and outside the study system.   
 
-*If we want to plot the full distribution as in the upper panel here, we should add another ocean model that covers the outside of the system to avoid the sharp edges.*  
+*If we want to plot the full distribution within a larger area than shown in the upper panel here, we should add another ocean model that covers the outside of the system to avoid sharp edges.*  
 
-```{r num_particles, fig.cap = num_particles, fig.height = 7, fig.width = 7}
+```{r num_particles, fig.cap = num_particles, fig.height = 5, fig.width = 7}
 
 cols_order <- c("thistle","purple","blue","green","yellow","orange","red","dark red","black")
 plotlist <- list()
+zlims <- c(0,15000)
 
 for(year in years){
   timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
@@ -433,7 +445,6 @@ for(x in 1:2){
   rasterNumParts$Number <- rasterNumParts$vol_particle
   
  maxval <- max(rasterNumParts$Number)
- zlims <- c(0,15000)
  #zlims <- c(0, quantile(rasterNumParts$Number, 0.9999))
 
  
@@ -486,20 +497,19 @@ grid.arrange(grobs = plotlist, layout_matrix = matrix(c(1:8),nrow=2,byrow=FALSE)
 
 ```
   
+Comparing the distribution of material originating from the river at the first day of every 2nd month during the simulation, the highest concentrations of river material is found in the inner fjord system from July and onward (`r figs("num_particles_day", display = "cite")`), corresponding to the period after the strongest river volume flow (`r figs("particle_release", display = "cite")`). The river water transport before May was stronger in 2019 compared to 2018 (`r figs("particle_release", display = "cite")`), which is reflected in higher concentrations of river material in the inner system in this year in May  (`r figs("num_particles_day", display = "cite")`).  *This figure could be moved to the supplementary material and potentially replaced by an animation.*  
 
-```{r num_particles_day, fig.cap = num_particles_day, fig.height = 12, fig.width = 9, eval=FALSE}
+```{r num_particles_day, fig.cap = num_particles_day, fig.height = 12, fig.width = 9}
 
 # `r figs("num_particles_day", display = "cite")` shows the distribution of water at the first day of each month of the simulation. *This figure could be moved to the supplementary material and potentially replaced by an animation.*  
 
 plotlist <- list()
+zlims <- c(0,100)
 
 for(year in years){
   timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
 
 for(x in 1:2){
-  if(x == 1){zlims <- c(0,3000)} else {
-    zlims <- c(0,10000)
-  }
   run_name <- paste0(runs[x],"_",timespan)
   dat <- get(paste0(run_name,"_dat"))
   dat_sp <- SpatialPointsDataFrame(cbind(dat$lon,dat$lat), data=dat)
@@ -515,16 +525,17 @@ for(x in 1:2){
     # Summing the volume of particles:
     rasterNumParts <- rasterize(x=dat_i[,"vol_particle"], y=fullRaster, fun="sum")
     rasterNumParts <- as.data.frame(rasterNumParts , xy=T, na.rm=T)
-    maxval <- max(rasterNumParts$ID)
+    rasterNumParts$Number <- rasterNumParts$vol_particle
+    maxval <- max(rasterNumParts$Number)
 
     dayplot <- ggmap(maparea_zoom) + 
-    geom_raster(data = rasterNumParts, aes(x = x, y = y, fill=ID), interpolate = TRUE) +
+    geom_raster(data = rasterNumParts, aes(x = x, y = y, fill=Number), interpolate = TRUE) +
     coord_cartesian() +
     scale_fill_gradientn(limits = zlims,
                          na.value = "red", #na.value color same as color for max value
                          colours = c("purple","blue", "green","yellow","orange","red"),
                          name="Number") +
-    ggtitle(paste0(days[i], "\nMax: ", maxval)) +
+    ggtitle(paste0(days[i], "\nMax: ", round(maxval))) +
     theme(axis.text.x=element_blank(),
           axis.ticks.x=element_blank(),
           axis.title.x=element_blank(),
@@ -536,39 +547,40 @@ for(x in 1:2){
           plot.title=element_text(margin=margin(t=40,b=-30)),
           panel.border = element_rect(colour = "black", fill=NA, size=1))
     
+     
+  # Add year/run to upper row
+  if(i == 1){
+    grob <- grobTree(textGrob(paste0(                                     str_to_sentence(gsub("\\P.*","",runs[x]))), x=0.6,
+                              y=0.9, hjust=0, gp=gpar(fontsize=15)))
+    dayplot <- dayplot + annotation_custom(grob)}
+   
     plotlist <- append(plotlist, list(dayplot)) 
-  
   }
-  
-  lastplot <- ggmap(maparea_zoom) +
+  }
+}
+
+ lastplot <- ggmap(maparea_zoom) +
     geom_raster(data = rasterNumParts, aes(x = x, y = y, fill=ID), interpolate = TRUE) +
     coord_cartesian() +
     scale_fill_gradientn(limits = zlims,
                          na.value = "red", #na.value color same as color for max value
-                         colours = c("purple","blue", "green","yellow","orange","red"), name="Number") #+
- #   theme(legend.direction = "horizontal") 
+                         colours = c("purple","blue", "green","yellow","orange","red"), name="Number") +
+    theme(legend.direction = "horizontal") 
 
   legend <- cowplot::get_legend(lastplot)
   plotlist <- append(plotlist, list(legend))
-  
-  #do.call("grid.arrange", c(plotlist, ncol=3,heights=unit(rep(5,3), "in")))
-}
-}
+ 
 
-grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:12),nrow=2,byrow=TRUE))
-
-# grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:24),ncol=4,byrow=FALSE),
-#              top=textGrob("Neutral   Sinking   Neutral  Sinking"))
+grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:5,NA,6:10,21,11:15,21,16:20,NA),ncol=4,byrow=FALSE), heights = c(rep(1,5),0.5))
 
 ```
 
-
-`r figs("num_particles_box", display = "cite")` shows the number of particles present within each per box (`r figs("study_area", display = "cite")`) per day during the simulation. The colors indicate the month of release of the particle ("origin").      
+To summarize the distribution of river material through time, `r figs("num_particles_box", display = "cite")` shows the sum of material present within each subarea of the study region (`r figs("study_area", display = "cite")`) per day during the simulation, separated into month of release. Little material is retained within the Local box while a larger fraction is retained within the Inner box, in particular for the sinking material. Material reaching the Outer box seem to pass through this area relatively quickly compared to the Inner box. A larger fraction of neutrally buoyant material reaches the Outside area (north of the Outer box), compared to the sinking material.      
 
 ```{r num_particles_box, fig.cap = num_particles_box, fig.height = 8, fig.width = 9}
 
 plotlist <- list()
-ylims <- c(0,28000)
+ylims <- c(0,60000)
 
 for(year in years){
 timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
@@ -577,11 +589,7 @@ timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
   xlims<-(c(min(dat$date),max(dat$date-1)))
   dates_days <- get(paste0("dates_days",year))
  
- #  if(x==1){ ylims <- c(0,160000)} else {
- #   ylims <- c(0,16000)
- # }
-
- for(i in c("local","inner","middle","outer")){
+ for(i in c("local","inner","outer")){
   lon_i <- get(paste0(i,"_box_lon"))
   lat_i <- get(paste0(i,"_box_lat"))
   
@@ -595,6 +603,7 @@ timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
     rename(Month = release_month, Date = date) %>% 
     mutate(Month = factor(Month, 
                              levels = as.character(seq(2,9))))
+
   
   plot_i <- ggplot(data=counts_i, aes(x=Date,y=n,fill=Month,color=Month)) +
                  geom_bar(stat="identity") +
@@ -610,12 +619,6 @@ timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
       ggtitle(paste0(year,": ", str_to_sentence(gsub("\\P.*","",runs[x]))))  
   }
   
-  # Add xlab to lower row
-  if(i == "outer"){
-    plot_i <- plot_i + 
-      theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5))
-  }
-  
   # Add indication of box to left column
   if(year == years[1] & x == 1){
     plot_i <- plot_i + 
@@ -623,7 +626,37 @@ timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
     }
    
   plotlist <- append(plotlist, list(plot_i))
+ }
+  
+  # For outside area: 
+  counts_i <- dat %>% 
+  filter(lat>outside_lat) %>% 
+  group_by(day, release_month) %>% 
+  #tally() %>% # Counting number of particles
+  summarize(n = sum(vol_particle)) %>% # Counting number of particles weighted by volume
+  left_join(dates_days)  %>% 
+  rename(Month = release_month, Date = date) %>% 
+  mutate(Month = factor(Month, 
+                        levels = as.character(seq(2,9))))
+
+    plot_i <- ggplot(data=counts_i, aes(x=Date,y=n,fill=Month,color=Month)) +
+                 geom_bar(stat="identity") +
+                 xlim(xlims) + ylim(ylims)+
+                ylab("") + 
+                theme_minimal() + theme(legend.position = "null",
+                axis.text.x=element_text(angle=90,hjust=1,vjust=0.5),
+        axis.title.x=element_blank())
+    
+  # Add indication of box to left column
+  if(year == years[1] & x == 1){
+    plot_i <- plot_i + 
+      ylab("Outside")
     }
+   
+  plotlist <- append(plotlist, list(plot_i))
+
+  
+  
   }
 }
  
@@ -648,7 +681,7 @@ grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:16),ncol=4,byrow=FALSE),
 
 ```
 
-`r figs("residence_time_box", display = "cite")` shows the mean residence time of particles in each box as a function of volume transport at the release time of the particle (5-days moving average counting from the day of release). It also includes particles that exit a box and then re-enters at a later point in time.    
+There is a large degree of variation in residence time of river material in the different subareas, from a day or less to over 300 days (`r figs("residence_time_box", display = "cite")`). Although the longest residence time tended to occur when river volume transport at the release time was low, there was no clear statistical relationship between residence time and volume transport, i.e., increased volume transport does not necessarily lead to faster movement and lower residence time of particles in the subareas.       
 
 ```{r residence_time_box, fig.cap = residence_time_box, fig.height = 8, fig.width = 9}
 
@@ -658,22 +691,16 @@ transport <- transport %>%
        mutate(transport_movavg = rollapply(transport, width = 5, FUN= mean, align = 'left', fill = NA))
 
 xlims <- range(transport$transport_movavg)
-ylims <- c(0,300)
+ylims <- c(0,334)
+
 plotlist <- list()
   
 for(year in years){
   timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
   for(x in 1:2){
     dat <- get(paste0(runs[x],"_",timespan,"_dat"))
-   #  xlims<-(c(min(dat$date),max(dat$date)))
-   #  dates_days <- get(paste0("dates_days",year))
-   # 
-   #  if(x==1){ ylims <- c(0,700)} else {
-   #   #ylims <- c(0,2000)
-   #   ylims <- c(0,700)
-   # }
-  
-   for(i in c("local","inner","middle","outer")){
+
+   for(i in c("local","inner","outer")){
     lon_i <- get(paste0(i,"_box_lon"))
     lat_i <- get(paste0(i,"_box_lat"))
     
@@ -686,8 +713,8 @@ for(year in years){
     
     plot_i <- ggplot(data=counts_i, aes(x=transport_movavg, y=n)) +
   geom_point(size=0.05, color = "dark grey") +
-  stat_summary(fun = mean, geom="line", colour="dark green") +
-  geom_smooth(method="gam", formula = y ~ s(x, bs = "cs", k = 4),
+  #stat_summary(fun = mean, geom="line", colour="dark green") +
+  geom_smooth(method="gam", formula = y ~ s(x, bs = "cs"),
               color = "black", se = FALSE) +
   xlim(xlims) + 
   ylim(ylims) + 
@@ -696,18 +723,10 @@ for(year in years){
                           axis.text.x=element_blank(),
                           axis.title.x=element_blank())
 
-    
-  
-      # Add year/run to upper row
+        # Add year/run to upper row
   if(i == "local"){
     plot_i <- plot_i +
       ggtitle(paste0(year,": ", str_to_sentence(gsub("\\P.*","",runs[x]))))
-  }
-
-  # Add xlab to lower row
-  if(i == "outer"){
-    plot_i <- plot_i +
-      theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5))
   }
 
   # Add indication of box to left column
@@ -718,6 +737,36 @@ for(year in years){
 
     plotlist <- append(plotlist, list(plot_i))
     } # Box
+    
+    
+  # For outside area: 
+  counts_i <- dat %>% 
+  filter(lat>outside_lat) %>% 
+   left_join(transport %>% mutate(release_date = as.character(release_date))) %>%
+      group_by(ID, transport_movavg, release_date, release_month) %>% 
+      tally() 
+
+    plot_i <- ggplot(data=counts_i, aes(x=transport_movavg, y=n)) +
+  geom_point(size=0.05, color = "dark grey") +
+  #stat_summary(fun = mean, geom="line", colour="dark green") +
+  geom_smooth(method="gam", formula = y ~ s(x, bs = "cs", k = 4),
+              color = "black", se = FALSE) +
+  xlim(xlims) + 
+  ylim(ylims) + 
+  ylab("") +
+  theme_minimal() + theme(legend.position = "null",
+                          axis.text.x= element_text(angle=90,hjust=1,vjust=0.5),
+                          axis.title.x=element_blank())
+    
+# Add indication of box to left column
+  if(year == years[1] & x == 1){
+    plot_i <- plot_i + 
+      ylab("Outside")
+    }
+   
+  plotlist <- append(plotlist, list(plot_i))
+
+    
   } # Run
 } # Year
  
@@ -792,7 +841,9 @@ grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:12),ncol=2,byrow=FALSE),
 # Acknowledgements
 
 # Supplemental figures
-```{r compare_particle_number, eval=FALSE}
+To assess if releasing 100 particles per day is sufficient to capture the general distribution patterns, we compared results for the 2018-simulation with neutrally buoyant particles to a run with 10 particles released per day. Increasing the number of particles released per day from 10 to 100 leads to a smoother cumulative distribution of river material in the fjord system and a larger total extent of material into the outside area, but the main patterns remain the same.   
+
+```{r compare_particle_number, fig.height = 7, fig.width = 7}
 # Comparing runs with 10 and 100 particles released per day (total 2420 vs. 24 200) 
 year <- 2018
 timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
@@ -843,32 +894,8 @@ for(i in 1:2){
     
   assign(paste0(run_name,"_dat"), dat)
   
-  
   rm(resultfile, DriftFile, timesteps, days_timestep, timesteps_days, timesteps_days_rounded, release_month, status, lon, lat, depth, age_seconds, age_days, datevector)
 }
-
-# Comparing mean particle depth:
-
-plotlist <- list()
-for(x in 1:2){
-  run_name <- paste0(runs[x],"_",timespan)
-  
-  plot_dep <- get(paste0(run_name,"_dat")) %>% 
-   filter(age != 0) %>%
-   group_by(date) %>% 
-   summarise(depth = mean(depth)) %>%
-    ggplot(aes(x=date,y=depth)) +
-  geom_line()+
-  ylim(c(-50, 0 )) +
-  ylab("Mean particle depth") +
-  theme_minimal() +
-  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
-  ggtitle(paste0(year,": ", runs[x]))
-  
-  plotlist <- append(plotlist, list(plot_dep)) 
-
-}
-grid.arrange(grobs = plotlist, ncol = 2)  
 
 
 # Comparing cumulative particle distribution
@@ -924,12 +951,25 @@ for(x in 1:2){
         axis.text.y=element_blank(),
         axis.ticks.y=element_blank())
 
-plotlist <- append(plotlist, list(fullmap, zoommap)) 
+  # Comparing mean particle depth:
+  plot_dep <- dat %>% 
+   filter(age != 0) %>%
+   group_by(date) %>% 
+   summarise(depth = mean(depth)) %>%
+    ggplot(aes(x=date,y=depth)) +
+  geom_line()+
+  ylim(c(-50, 0 )) +
+  ylab("Mean particle depth") +
+  theme_minimal() +
+  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) 
+  
+
+plotlist <- append(plotlist, list(fullmap, zoommap, plot_dep)) 
   
 rm(dat)
 }
 
-grid.arrange(grobs = plotlist, layout_matrix = matrix(c(1:4),nrow=2,byrow=FALSE))
+grid.arrange(grobs = plotlist, layout_matrix = matrix(c(1:6),nrow=3,byrow=FALSE))
 
 
 ```
