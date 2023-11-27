@@ -30,7 +30,7 @@ sinkingParticles = True
 
 if sinkingParticles:
     run_name = 'sinkingParticles'
-    terminalVelocity = -.0003  # Settling speed in m/s (.001 = 1 mm/s) 
+    terminalVelocity = -.0008  # Settling speed in m/s (.001 = 1 mm/s) 
     outfile = '/cluster/projects/nn8103k/NIVA-NOLA/results/%s_%sms_%s_to_%s.nc'%(run_name,terminalVelocity,startDay,endDay)
     o = SedimentDrift(loglevel=20)
 else:
