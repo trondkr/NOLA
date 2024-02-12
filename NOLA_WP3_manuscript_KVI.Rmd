@@ -40,7 +40,7 @@ editor_options:
 
 
 ```{r settings, include=FALSE}
-rm(list = ls())
+#rm(list = ls())
 knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE)
 knitr::opts_chunk$set(fig.retina = 1)
 
@@ -59,6 +59,7 @@ library(knitr)
 library(grid)
 library(gridExtra)
 library(zoo)
+library(flextable)
 
 
 # Function to find first day of given month
@@ -439,7 +440,6 @@ Description of how the data were analyzed, visualized....
 # Results
 Cumulatively over the course of the year (February to December), material originating from the Målselv river is distributed throughout the Malangen fjord system, into the Norwegian Sea and north along the Norwegian coast (`r figs("num_particles", display = "cite")`). The highest concentration of material originating from the river is found locally along the eastern coast of inner fjord area, in addition to within the release area (where all river water passes through initially, `r figs("num_particles", display = "cite")`). Comparing neutrally buoyant and sinking material, a higher fraction of the sinking material is kept within the inner fjord system, while much of the neutrally buoyant material is spread throughout and outside the study system.   
 
-*If we want to plot the full distribution within a larger area than shown in the upper panel here, we should add another ocean model that covers the outside of the system to avoid sharp edges.*  
 
 ```{r num_particles, fig.cap = num_particles, fig.height = 5, fig.width = 7}
 
@@ -521,16 +521,15 @@ Comparing the distribution of material originating from the river at the first d
 # `r figs("num_particles_day", display = "cite")` shows the distribution of water at the first day of each month of the simulation. *This figure could be moved to the supplementary material and potentially replaced by an animation.*  
 
 plotlist <- list()
-zlims <- c(0,100)
+zlims <- c(0,7.4)
 
-for(year in years){
+for(x in 1:3){
+  for(year in years){
   timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
-
-for(x in 1:2){
   run_name <- paste0(runs[x],"_",timespan)
   dat <- get(paste0(run_name,"_dat"))
   dat_sp <- SpatialPointsDataFrame(cbind(dat$lon,dat$lat), data=dat)
-  days <- firstDayMonth(unique(dat_sp$date))[seq(2,10,by=2)]
+  days <- firstDayMonth(unique(dat_sp$date))[c(4,7,10)]
 
   for(i in 1:length(days)){
     dat_i <- dat_sp[dat_sp$date==days[i],]
@@ -542,17 +541,18 @@ for(x in 1:2){
     # Summing the volume of particles:
     rasterNumParts <- rasterize(x=dat_i[,"vol_particle"], y=fullRaster, fun="sum")
     rasterNumParts <- as.data.frame(rasterNumParts , xy=T, na.rm=T)
-    rasterNumParts$Number <- rasterNumParts$vol_particle
-    maxval <- max(rasterNumParts$Number)
+    rasterNumParts$Number <- log(rasterNumParts$vol_particle+1)
+    #maxval <- max(rasterNumParts$Number)
 
-    # dayplot <- ggmap(maparea_zoom) + 
-     dayplot <- maparea_zoom + 
-        geom_raster(data = rasterNumParts, aes(x = x, y = y, fill=Number), interpolate = TRUE) +
+    dayplot <- maparea_all +
+      coord_cartesian(xlim = c(17.4, 19.25), ylim = c(69.25, 69.7)) + 
+      geom_raster(data = rasterNumParts, aes(x = x, y = y, fill=Number), interpolate = TRUE) +
     scale_fill_gradientn(limits = zlims,
                          na.value = "red", #na.value color same as color for max value
                          colours = c("purple","blue", "green","yellow","orange","red"),
                          name="Number") +
-    ggtitle(paste0(days[i], "\nMax: ", round(maxval))) +
+    #ggtitle(paste0(days[i], "\nMax: ", round(maxval))) +
+    ggtitle(days[i]) +
     theme(axis.text.x=element_blank(),
           axis.ticks.x=element_blank(),
           axis.title.x=element_blank(),
@@ -561,33 +561,29 @@ for(x in 1:2){
           axis.title.y=element_blank(),
           legend.position="none",
           plot.margin = unit(c(-2,0,-0.5,0), "lines"),
-          plot.title=element_text(margin=margin(t=40,b=-30)),
+          plot.title=element_text(margin=margin(t=40,b=-20)),
           panel.border = element_rect(colour = "black", fill=NA, size=1))
-    
-     
-  # Add year/run to upper row
-  if(i == 1){
-    grob <- grobTree(textGrob(paste0(                                     str_to_sentence(gsub("\\P.*","",runs[x]))), x=0.6,
-                              y=0.9, hjust=0, gp=gpar(fontsize=15)))
-    dayplot <- dayplot + annotation_custom(grob)}
-   
-    plotlist <- append(plotlist, list(dayplot)) 
-  }
-  }
-}
 
- lastplot <- maparea_zoom  +
-    geom_raster(data = rasterNumParts, aes(x = x, y = y, fill=ID), interpolate = TRUE) +
+    plotlist <- append(plotlist, list(dayplot)) 
+  } # Days
+  } # Year
+} # Run
+
+# Get legend
+ lastplot <- maparea_all  +
+    geom_raster(data = rasterNumParts, aes(x = x, y = y, fill=Number), interpolate = TRUE) +
     scale_fill_gradientn(limits = zlims,
                          na.value = "red", #na.value color same as color for max value
-                         colours = c("purple","blue", "green","yellow","orange","red"), name="Number") +
+                         colours = c("purple","blue", "green","yellow","orange","red"), name="log(Volume)") +
     theme(legend.direction = "horizontal") 
 
   legend <- cowplot::get_legend(lastplot)
   plotlist <- append(plotlist, list(legend))
  
 
-grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:5,NA,6:10,21,11:15,21,16:20,NA),ncol=4,byrow=FALSE), heights = c(rep(1,5),0.5))
+grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:6,NA,7:12,19,13:17,18,NA),ncol=3,byrow=FALSE), heights = c(rep(1,6),0.5), top=textGrob(run_name_short))
+
+
 
 ```
 
@@ -946,6 +942,78 @@ grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:6),ncol=3,byrow=TRUE),
 
 
 ```
+
+
+% of particles present per box per month of simulation (1st day of month)
+```{r perc_within_box}
+
+
+for(year in years){
+  timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
+  for(x in 1:3){
+    dat <- get(paste0(runs[x],"_",timespan,"_dat")) %>%
+        mutate(year = year(date), month = month(date), month_day = day(date))  %>% 
+        filter(month_day == 1 & month > 2)
+    
+    count_all <- dat %>% 
+        group_by(year, month) %>% 
+        tally() 
+    
+    for(i in c("local","inner","middle","outer")){
+      lon_i <- get(paste0(i,"_box_lon"))
+      lat_i <- get(paste0(i,"_box_lat"))
+      
+      count_i <- dat %>% 
+        filter(lon>min(lon_i) & lon<max(lon_i)) %>% 
+        filter(lat>min(lat_i) & lat<max(lat_i)) %>%
+        group_by(year, month) %>% 
+        tally() %>%
+        rename(!!i:= n)
+      
+      count_all <- count_all  %>%
+        left_join(count_i)
+
+      rm(count_i)
+    }
+      
+    # For outside area: 
+    count_outside <- dat %>% 
+      filter(lat>outside_lat) %>% 
+              group_by(month) %>% 
+        tally() %>%
+        rename(outside =n) 
+    
+    count_all <- count_all %>%
+        left_join(count_outside) %>%
+      mutate(across(c("local":"outside"),
+           .fns = ~round(./n,2)))
+    
+    rm(count_outside)
+    
+    assign(paste0("perc_", run_name_short[x],"_",year), count_all)
+    rm(count_all)
+  } # Run
+} # Year
+
+
+all_perc <- bind_cols(bind_rows(perc_Dissolved_2018, perc_Dissolved_2019), 
+                      bind_rows(perc_Mud_2018[,-c(1:3)], perc_Mud_2019[,-c(1:3)]), 
+                      bind_rows(perc_Sand_2018[,-c(1:3)], perc_Sand_2019[,-c(1:3)]))
+
+tab <- flextable(all_perc) %>% 
+  set_header_labels(values = c("Year","Month","N",rep(c("Local","Inner","Middle","Outer","Outside"),3)))  %>% 
+  add_header_row(values = c("", "Dissolved", "Mud", "Sand"),  colwidths = c(3, 5, 5, 5))  %>% 
+  colformat_num(j = 1,  big.mark = "") %>% 
+  vline(j = c(3,8,13))  %>% 
+  hline(i = 10) %>% 
+  rotate(j=1,rotation="btlr") %>% 
+  merge_v(j = 1)   %>% 
+  align(align = "center", part = "header")
+
+tab
+
+```
+
 
 ```{r age_particles_day, fig.cap = age_particles_day, fig.height = 11, fig.width = 9,eval=FALSE}
 
