@@ -168,6 +168,7 @@ for(i in 1:3){
         mutate(lon=c(t(lon)))  %>%
         mutate(lat=c(t(lat)))  %>%
         mutate(depth=c(t(depth)))   %>%
+        mutate(bottom_depth=c(t(bottom_depth)))   %>%
         filter(!is.na(release_month))
     
   assign(paste0(run_name,"_dat"), dat)
@@ -300,7 +301,7 @@ For a northern Norwegian case study site (Malangen), use high-resolution particl
 # Methods
 
 ## Study area
-The study area encompasses the mouth of the Målselv river in Northern Norway and the downstream Malangen fjord that can transport river water out into the Norwegian Sea (`r figs("study_area", display = "cite")`). The study area was divided into different subareas at varying distance from the river mouth to study the flux of river water and residence time.  
+The study area encompasses the mouth of the Målselv river in Northern Norway and the downstream Malangen fjord that can transport river water out into the Norwegian Sea (`r figs("study_area", display = "cite")`). This river fjord system has been the subject of previous observational studies focusing on organic matter and nutrient dynamics along the freshwater-marine continuum, providing valuable background data for the current study (e.g. Frigstad et al. 2020, Schultze et al. 2022). The study area was divided into five different subareas at varying distancedifferent subareas at varying distance from the river mouth to study the flux of river water and residence time.  
 
 ```{r study_area, fig.cap = study_area, fig.height = 4, fig.width = 7}
 #Plot distribution at release
@@ -399,7 +400,7 @@ plotlist <- list()
 for(year in years){
   timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
 
-  for(x in 1:2){
+  for(x in 1:3){
     run_name <- paste0(runs[x],"_",timespan)
     
     plot_dep <- get(paste0(run_name,"_dat")) %>% 
