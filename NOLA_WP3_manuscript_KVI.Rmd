@@ -12,7 +12,7 @@ output:
     - '--lua-filter=author-info-blocks.lua'
 bibliography: library.bib
 csl: frontiers-in-marine-science.csl
-title: "Seasonal and interannual variation in river water influence in an Arctic fjord"
+title: "Seasonal and interannual variation in river water influence in a sub-Arctic fjord"
 author:
   - Kristina Ø. Kvile:
       email: kristina.kvile@niva.no
@@ -24,7 +24,7 @@ author:
     institute: [NIVA]
   - name: Jon Albretsen
     institute: [IMR]
-  - name: Angelika Renner
+  - name: Angelika H.H. Renner
     institute: [IMR]
   - name: Amanda Poste 
     institute: [NIVA]
@@ -60,6 +60,7 @@ library(grid)
 library(gridExtra)
 library(zoo)
 
+
 # Function to find first day of given month
 firstDayMonth=function(x)
 {           
@@ -71,20 +72,34 @@ firstDayMonth=function(x)
 }
 
 
-# Map layers
-maparea_all <- get_stamenmap(bbox = c(left = 16.1, bottom = 69.2, right = 21.8,
-                                      top = 70.35), 
-                             zoom = 8,maptype = "toner-lite")
+# Map basics
+landcol<-"gray91"#"darkslategrey"
+oceancol<-"white" #"deepskyblue4"
 
-maparea_zoom <- get_stamenmap(bbox = c(left = 17.7, bottom = 69.28,                                          right = 19.2, top = 69.7), 
-                                zoom = 10,maptype = 'toner-lite')
+maparea_all <- ggplot() +
+  geom_polygon(data = map_data("worldHires"), aes(x = long, y = lat, group = group), # Change to worldHires later
+               colour = landcol, fill = landcol) +
+  coord_cartesian(xlim = c(16.1, 21.8), ylim = c(69.2, 70.35) ) + 
+  theme(axis.title.x=element_blank(),axis.title.y=element_blank(),
+        panel.background=element_rect(fill = oceancol, colour = oceancol),
+        panel.grid.major=element_blank(),panel.grid.minor=element_blank(),
+        panel.border = element_rect(colour = "black", fill=NA, size=0.5)) 
 
+
+maparea_zoom <- ggplot() +
+  geom_polygon(data = map_data("worldHires"), aes(x = long, y = lat, group = group), # Change to worldHires later
+               colour = landcol, fill = landcol) +
+  coord_cartesian(xlim = c(17.7, 19.2), ylim = c(69.28, 69.7) ) + 
+  theme(axis.title.x=element_blank(),axis.title.y=element_blank(),
+        panel.background=element_rect(fill = oceancol, colour = oceancol),
+        panel.grid.major=element_blank(),panel.grid.minor=element_blank(),
+        panel.border = element_rect(colour = "black", fill=NA, size=0.5)) 
 
 # Figure labels
 figs <- captioner(prefix="Figure")
 
 
-study_area <- figs(name="study_area","Study area. The black points show the particle release area at the mouth of the Målselv river. The colored boxes and dashed line show the limits of subareas used to quantify the distribution of river material (Outside: north of the Outer box).")
+study_area <- figs(name="study_area","Study area. The background map shows the location of the study area (black rectangle), and the inset shows the details of the study area. The black points show the particle release area at the mouth of the Målselv river. The colored boxes and dashed line show the limits of subareas used to quantify the distribution of river material (Outside: north of the Outer box).")
 
 particle_release <- figs(name="particle_release","Number of particles released per day (A), the cumulative number of particles during the run (B), and the river volume flux per date for 2018 (C) and 2019 (D). The released particles (A) were scaled by the river volume flux (C, D) to represent the amount of river material. Panels A and B are illustrated for one year, but the setup is the same for both years.")
 
@@ -106,12 +121,12 @@ age_particles_day <- figs(name="age_particles_day","Age distribution of particle
 
 ```{r read_opendrift_output, include=FALSE}
 years <- c(2018,2019)
-runs<-c("neutralParticles","sinkingParticles_-0.0003ms")
+runs<-c("neutralParticles","sinkingParticles_-0.0003ms","sinkingParticles_-0.0008ms")
 
 for(year in years){
   timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
   
-for(i in 1:2){
+for(i in 1:3){
   run_name <- paste0(runs[i],"_",timespan)
   resultfile <- paste0("../results/",run_name,".nc")
   DriftFile <- nc_open(resultfile, write=FALSE) #for nc
@@ -202,7 +217,7 @@ for(year in years){
   timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
   num_particles_timestep <- get(paste0("num_particles_timestep_",year))
                                 
-  for(x in 1:2){
+  for(x in 1:3){
   run_name <- paste0(runs[x],"_",timespan)
   
  # Full join doesn't work with dates  
@@ -234,8 +249,11 @@ rm(dat_releaseday)
 local_box_lon = c(18.462861, 18.562647)
 local_box_lat = c(69.304173, 69.357645)
 
-inner_box_lon = c(18.349934, 19.000649)
-inner_box_lat = c(69.257388, 69.438920)
+inner_box_lon = c(18.5627, 19.05)
+inner_box_lat = c(69.25, 69.357645)
+
+middle_box_lon = c(18.349934, 18.718452)
+middle_box_lat = c(69.357645, 69.438920)
 
 outer_box_lon = c(17.823399, 18.718452)
 outer_box_lat = c(69.438921, 69.571700)
@@ -275,7 +293,7 @@ localRaster <- raster(resolution = reso, xmn=min(local_box_lon), xmx=max(local_b
 *	Seasonal variation (spring freshet, degree of wind mixing)
 
 ## Aims
-For a northern Norwegian case study site (Malangen, potentially compared with the Tana fjord), use high-resolution particle-tracking modeling to study the seasonality of river outflow and residence time of river water in the fjord to better understand the potential effect of seasonality and high flow events for fjord biogeochemistry and coastal darkening.  
+For a northern Norwegian case study site (Malangen), use high-resolution particle-tracking modeling to study the seasonality of river outflow and residence time of river water in the fjord to better understand the potential effect of seasonality and high flow events for fjord biogeochemistry and coastal darkening.  
         
 
 # Methods
@@ -285,28 +303,30 @@ The study area encompasses the mouth of the Målselv river in Northern Norway an
 
 ```{r study_area, fig.cap = study_area, fig.height = 4, fig.width = 7}
 #Plot distribution at release
-maparea_study <- get_stamenmap(bbox = c(left = 17.2, bottom = 69.2, 
-                                        right = 19.35, top = 69.8), 
-                               zoom = 8,maptype = 'toner-lite')
+overview <- maparea_all +
+  coord_cartesian(xlim = c(5, 30), ylim = c(59, 72))  +   
+  geom_rect(linewidth=1, aes(xmin = 17.4, xmax = 19.25, ymin = 69.25, ymax= 69.7), fill=NA,color="black") 
 
-ggmap(maparea_study) + 
+zoomed <- maparea_all +
+  coord_cartesian(xlim = c(17.4, 19.25), ylim = c(69.25, 69.7)) + 
   geom_rect(aes(xmin = min(local_box_lon), xmax = max(local_box_lon), ymin = min(local_box_lat), ymax = max(local_box_lat)), alpha=0.2, fill="red") +
   geom_text(aes(x = min(local_box_lon), y = max(local_box_lat-0.02), label = "Local box"),size = 4, vjust = 0, hjust = 0)+
   geom_rect(aes(xmin = min(inner_box_lon), xmax = max(inner_box_lon), ymin = min(inner_box_lat), ymax = max(inner_box_lat)), alpha=0.1, fill="orange") +
-    geom_text(aes(x = min(inner_box_lon), y = max(inner_box_lat-0.02), label = "Inner box"),size = 4, vjust = 0, hjust = 0)+
-    geom_rect(aes(xmin = min(outer_box_lon), xmax = max(outer_box_lon), ymin = min(outer_box_lat), ymax = max(outer_box_lat)), alpha=0.1, fill="blue") +
-        geom_text(aes(x = min(outer_box_lon), y = max(outer_box_lat-0.02), label = "Outer box"),size = 4, vjust = 0, hjust = 0) +
-   geom_hline(yintercept= outside_lat, linetype="dashed") +
-        geom_text(aes(x = min(outer_box_lon)-0.1, y = outside_lat+0.01, label = "Outside"),size = 4, vjust = 0, hjust = 0)+
-   geom_point(data=dat  %>% filter(day==1),
+  geom_text(aes(x = max(inner_box_lon-0.25), y = max(inner_box_lat-0.02), label = "Inner box"),size = 4, vjust = 0, hjust = 0)+
+  geom_rect(aes(xmin = min(middle_box_lon), xmax = max(middle_box_lon), ymin = min(middle_box_lat), ymax = max(middle_box_lat)), alpha=0.1, fill="green") +
+  geom_text(aes(x = min(middle_box_lon), y = max(middle_box_lat-0.02), label = "Middle box"),size = 4, vjust = 0, hjust = 0) +
+  geom_rect(aes(xmin = min(outer_box_lon), xmax = max(outer_box_lon), ymin = min(outer_box_lat), ymax = max(outer_box_lat)), alpha=0.1, fill="blue") +
+  geom_text(aes(x = min(outer_box_lon), y = max(outer_box_lat-0.02), label = "Outer box"),size = 4, vjust = 0, hjust = 0) +
+  geom_hline(yintercept= outside_lat, linetype="dashed") +
+  geom_text(aes(x = min(outer_box_lon)-0.1, y = outside_lat+0.01, label = "Outside"),size = 4, vjust = 0, hjust = 0)+
+  geom_point(data=dat  %>% filter(day==1),
              aes(x = lon, y = lat), size=0.1,color="black")  +
   geom_text(aes(x = max(local_box_lon), y = min(local_box_lat-0.04), label = "Release area"),size = 4, vjust = 0, hjust = 0) +
-geom_curve(aes(x = max(local_box_lon)+2, y = min(local_box_lat-2), xend = min(local_box_lon), yend = min(local_box_lat)),
-           arrow = arrow(length = unit(0.03, "npc"))) + 
-  geom_segment(aes(x = max(local_box_lon), y = min(local_box_lat)-0.02, xend = mean(local_box_lon), yend = min(local_box_lat)-0.002),
-           arrow = arrow(length = unit(0.15, "cm"))) + 
-   xlab("Lon (°E)") + ylab("Lat (°N)")
+  geom_segment(aes(x = max(local_box_lon)+0.03, y = min(local_box_lat)-0.03, xend = mean(local_box_lon)+0.01, yend = min(local_box_lat)-0.002),
+               arrow = arrow(length = unit(0.2, "cm")))
 
+overview + annotation_custom(ggplotGrob(zoomed), xmin = 15, xmax = 31, 
+                       ymin = 58.5, ymax = 67)
 ```
 
 ## Simulating drift of material from river to ocean
@@ -384,10 +404,11 @@ for(year in years){
     plot_dep <- get(paste0(run_name,"_dat")) %>% 
       filter(age != 0) %>%
     ggplot(aes(x=date, y=depth))+ 
-    #stat_summary(geom="ribbon", fun.data=mean_cl_normal, fill="grey")+
+   # stat_summary(geom="ribbon", fun.data=mean_cl_normal, fill="grey")+
    stat_summary(geom="ribbon", fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), fill = "light grey") + 
     stat_summary(geom="line", fun=mean)+
-    coord_cartesian(ylim = c(-90, -10)) +  
+    #coord_cartesian(ylim = c(-90, -10)) +
+      coord_cartesian(ylim = c(-130, -10)) +
     theme_minimal() +
     theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
     ggtitle(paste0(year,": ", str_to_sentence(gsub("\\P.*","",runs[x]))))
@@ -447,13 +468,11 @@ for(x in 1:2){
  maxval <- max(rasterNumParts$Number)
  #zlims <- c(0, quantile(rasterNumParts$Number, 0.9999))
 
- 
-  fullmap <- ggmap(maparea_all) + 
+  fullmap <- maparea_all + 
   geom_raster(data = rasterNumParts, aes(x = x, y = y, fill=Number), interpolate = TRUE) +
   scale_fill_gradientn(limits = zlims,
                        na.value = "red", #na.value color same as color for max value
                        colours = cols_order) +
-  coord_cartesian() +
   #scale_fill_gradientn(colours=topo.colors(500, alpha=0.4), name="Number") +
   geom_rect(aes(xmin = 17.7, xmax = 19.2, ymin =
                   min(rasterNumParts$y), ymax = 69.7), color="black",fill=NA) + 
@@ -469,10 +488,8 @@ for(x in 1:2){
         axis.text.y=element_blank(),
         axis.ticks.y=element_blank())
 
-
-  zoommap <- ggmap(maparea_zoom) + 
+ zoommap <- maparea_zoom + 
     geom_raster(data = rasterNumParts, aes(x = x, y = y, fill=Number), interpolate = TRUE) +
-    coord_cartesian() +
     scale_fill_gradientn(limits = zlims,
                          na.value = "red", #na.value color same as color for max value
                          colours = cols_order) +
@@ -528,9 +545,9 @@ for(x in 1:2){
     rasterNumParts$Number <- rasterNumParts$vol_particle
     maxval <- max(rasterNumParts$Number)
 
-    dayplot <- ggmap(maparea_zoom) + 
-    geom_raster(data = rasterNumParts, aes(x = x, y = y, fill=Number), interpolate = TRUE) +
-    coord_cartesian() +
+    # dayplot <- ggmap(maparea_zoom) + 
+     dayplot <- maparea_zoom + 
+        geom_raster(data = rasterNumParts, aes(x = x, y = y, fill=Number), interpolate = TRUE) +
     scale_fill_gradientn(limits = zlims,
                          na.value = "red", #na.value color same as color for max value
                          colours = c("purple","blue", "green","yellow","orange","red"),
@@ -559,9 +576,8 @@ for(x in 1:2){
   }
 }
 
- lastplot <- ggmap(maparea_zoom) +
+ lastplot <- maparea_zoom  +
     geom_raster(data = rasterNumParts, aes(x = x, y = y, fill=ID), interpolate = TRUE) +
-    coord_cartesian() +
     scale_fill_gradientn(limits = zlims,
                          na.value = "red", #na.value color same as color for max value
                          colours = c("purple","blue", "green","yellow","orange","red"), name="Number") +
@@ -685,7 +701,7 @@ grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:16),ncol=4,byrow=FALSE),
 
 There is a large degree of variation in residence time of river material in the different subareas, from a day or less to over 300 days (`r figs("residence_time_box", display = "cite")`). Although the longest residence time tended to occur when river volume transport at the release time was low, there was no clear statistical relationship between residence time and volume transport, i.e., increased volume transport does not necessarily lead to faster movement and lower residence time of particles in the subareas. There was on average a higher volume flux in 2019 compared to 2018.          
 
-```{r residence_time_box, fig.cap = residence_time_box, fig.height = 8, fig.width = 9}
+```{r residence_time_box_vs_volume, fig.cap = residence_time_box, fig.height = 8, fig.width = 9}
 
 # Calculate moving window of water volume transport (from release day and 4 following days)
 # Log-transform to reduce influence of outliers?
@@ -780,98 +796,153 @@ grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:16),ncol=4,byrow=FALSE),
 
 
 ```
+Residence time per box: Difference between first and last time within box, plotted per release month and run.
 
 ```{r residence_time_box, fig.cap = residence_time_box, fig.height = 8, fig.width = 9}
 
-# Calculate moving window of water volume transport (from release day and 4 following days)
-
-transport <- transport %>% 
-       mutate(transport_movavg = rollapply(transport, width = 5, FUN= mean, align = 'left', fill = NA))
-
-xlims <- range(transport$transport_movavg)
 ylims <- c(0,334)
 
 plotlist <- list()
-  
+
 for(year in years){
   timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
-  for(x in 1:2){
+  for(x in 1:3){
     dat <- get(paste0(runs[x],"_",timespan,"_dat"))
-
-   for(i in c("local","inner","outer")){
-    lon_i <- get(paste0(i,"_box_lon"))
-    lat_i <- get(paste0(i,"_box_lat"))
     
-    counts_i <- dat %>% 
-      filter(lon>min(lon_i) & lon<max(lon_i)) %>% 
-      filter(lat>min(lat_i) & lat<max(lat_i)) %>%
-      filter(release_month>7) %>% 
-      left_join(transport %>% mutate(release_date = as.character(release_date))) %>%
-      group_by(ID, transport_movavg, release_date, release_month) %>% 
-      tally() 
-    
-    plot_i <- ggplot(data=counts_i, aes(x=transport_movavg, y=n)) +
-  geom_point(size=0.05, color = "dark grey") +
-  #stat_summary(fun = mean, geom="line", colour="dark green") +
-  geom_smooth(method="gam", formula = y ~ s(x, bs = "cs"),
-              color = "black", se = FALSE) +
-  xlim(xlims) + 
-  ylim(ylims) + 
-  ylab("") +
-  theme_minimal() + theme(legend.position = "null",
-                          axis.text.x=element_blank(),
-                          axis.title.x=element_blank())
-
-        # Add year/run to upper row
-  if(i == "local"){
-    plot_i <- plot_i +
-      ggtitle(paste0(year,": ", str_to_sentence(gsub("\\P.*","",runs[x]))))
-  }
-
-  # Add indication of box to left column
-  if(year == years[1] & x == 1){
-    plot_i <- plot_i +
-      ylab(str_to_sentence(paste0(i," box")))
-  }
-
-    plotlist <- append(plotlist, list(plot_i))
-    } # Box
-    
-    
-  # For outside area: 
-  counts_i <- dat %>% 
-  filter(lat>outside_lat) %>% 
-    filter(release_month>7) %>%
-   left_join(transport %>% mutate(release_date = as.character(release_date))) %>%
-      group_by(ID, transport_movavg, release_date, release_month) %>% 
-      tally() 
-
-    plot_i <- ggplot(data=counts_i, aes(x=transport_movavg, y=n)) +
-  geom_point(size=0.05, color = "dark grey") +
-  #stat_summary(fun = mean, geom="line", colour="dark green") +
-  geom_smooth(method="gam", formula = y ~ s(x, bs = "cs", k = 4),
-              color = "black", se = FALSE) +
-  xlim(xlims) + 
-  ylim(ylims) + 
-  ylab("") +
-  theme_minimal() + theme(legend.position = "null",
-                          axis.text.x= element_text(angle=90,hjust=1,vjust=0.5),
-                          axis.title.x=element_blank())
-    
-# Add indication of box to left column
-  if(year == years[1] & x == 1){
-    plot_i <- plot_i + 
-      ylab("Outside")
+    for(i in c("local","inner","middle","outer")){
+      lon_i <- get(paste0(i,"_box_lon"))
+      lat_i <- get(paste0(i,"_box_lat"))
+      
+      residence_i <- dat %>% 
+        filter(lon>min(lon_i) & lon<max(lon_i)) %>% 
+        filter(lat>min(lat_i) & lat<max(lat_i)) %>%
+        group_by(ID, release_month) %>% 
+        summarise(residence = max(age+1)-min(age)) %>%
+        mutate(region = i)
+      
+      assign(paste0("residence_", i), residence_i)
+      rm(residence_i)
     }
-   
-  plotlist <- append(plotlist, list(plot_i))
-
+      
+    # For outside area: 
+    residence_outside <- dat %>% 
+      filter(lat>outside_lat) %>% 
+      group_by(ID, release_month) %>% 
+      summarise(residence = max(age+1)-min(age)) %>%
+      mutate(region = "outside")
     
+    residence_all <- rbind(residence_local, residence_inner, residence_middle, residence_outer, residence_outside)  %>%
+      mutate(release_month = factor(release_month, levels=c(2:9)),
+             region = factor(region, levels =c("local","inner","middle","outer","outside")))
+    
+    plot_x <- 
+      ggplot(data=residence_all, aes(x=release_month, y=residence, fill=region)) +
+      geom_boxplot(size=0.1, outlier.size=0.1) +
+      ylim(ylims) + 
+      xlab("") + ylab("") +
+      theme_classic() + theme(legend.position = "null")
+      
+    # Legend run to first plot
+    if(year == years[1] & x == 1){
+      plot_x <- plot_x +
+        theme(legend.position = c(.85, .9), legend.title = element_blank(), 
+              legend.text = element_text(size = 8))
+    }
+    
+    # Add run to upper row
+      if(year == years[1]){
+        plot_x <- plot_x +
+          ggtitle(run_name_short[x])
+      }
+      
+      # Add year to left column
+      if(x == 1){
+        plot_x <- plot_x +
+          ylab(year)
+      }
+      
+      plotlist <- append(plotlist, list(plot_x))
   } # Run
 } # Year
- 
-grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:16),ncol=4,byrow=FALSE),
-            left=textGrob("Residence time (days)", rot=90), bottom=textGrob("Total volume flux (m3/d)"))
+
+grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:6),ncol=3,byrow=TRUE),
+             left=textGrob("Residence time (days)", rot=90), bottom=textGrob("Release month"))
+
+
+```
+
+Time to reach box: First day within box, plotted per release month and particle type
+
+```{r time_to_reach_box, fig.cap = residence_time_box, fig.height = 8, fig.width = 9}
+
+ylims <- c(0,334)
+
+plotlist <- list()
+
+for(year in years){
+  timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
+  for(x in 1:3){
+    dat <- get(paste0(runs[x],"_",timespan,"_dat"))
+    
+    for(i in c("inner","middle","outer")){
+      lon_i <- get(paste0(i,"_box_lon"))
+      lat_i <- get(paste0(i,"_box_lat"))
+      
+      firstday_i <- dat %>% 
+        filter(lon>min(lon_i) & lon<max(lon_i)) %>% 
+        filter(lat>min(lat_i) & lat<max(lat_i)) %>%
+        group_by(ID, release_month) %>% 
+        summarise(firstday = min(age)) %>%
+        mutate(region = i)
+      
+      assign(paste0("firstday_", i), firstday_i)
+      rm(firstday_i)
+    }
+      
+    # For outside area: 
+    firstday_outside <- dat %>% 
+      filter(lat>outside_lat) %>% 
+      group_by(ID, release_month) %>% 
+      summarise(firstday = min(age)) %>%
+      mutate(region = "outside")
+    
+    firstday_all <- rbind(firstday_inner, firstday_middle,
+                           firstday_outer, firstday_outside)  %>%
+      mutate(release_month = factor(release_month, levels=c(2:9)),
+             region = factor(region, levels =c("inner","middle","outer","outside")))
+    
+    plot_x <- 
+      ggplot(data=firstday_all, aes(x=release_month, y=firstday, fill=region)) +
+      geom_boxplot(size=0.1, outlier.size=0.1) +
+      ylim(ylims) + 
+      xlab("") + ylab("") +
+      theme_classic() + theme(legend.position = "null")
+      
+    # Legend run to first plot
+    if(year == years[1] & x == 1){
+      plot_x <- plot_x +
+        theme(legend.position = c(.85, .9), legend.title = element_blank(), 
+              legend.text = element_text(size = 8))
+    }
+    
+    # Add run to upper row
+      if(year == years[1]){
+        plot_x <- plot_x +
+          ggtitle(run_name_short[x])
+      }
+      
+      # Add year to left column
+      if(x == 1){
+        plot_x <- plot_x +
+          ylab(year)
+      }
+      
+      plotlist <- append(plotlist, list(plot_x))
+  } # Run
+} # Year
+
+grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:6),ncol=3,byrow=TRUE),
+             left=textGrob("Time to reach area (days)", rot=90), bottom=textGrob("Release month"))
 
 
 ```
