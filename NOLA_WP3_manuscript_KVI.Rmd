@@ -12,7 +12,7 @@ output:
     - '--lua-filter=author-info-blocks.lua'
 bibliography: library.bib
 csl: frontiers-in-marine-science.csl
-title: "Seasonal and interannual variation in river water influence in a sub-Arctic fjord"
+title: "Seasonal and interannual variation in riverine influence in a sub-Arctic fjord"
 author:
   - Kristina Ø. Kvile:
       email: kristina.kvile@niva.no
@@ -33,7 +33,7 @@ institute:
   - apn: Akvaplan-Niva AS, Oslo, Norway
   - IMR: Institute of Marine Research, Bergen, Norway
   - NINA: Norwegian Institute  for Nature Research, Tromsø, Norway
-abstract: "**Abstract**: *Introduction:* Climate change effects on freshwater fluxes in coastal ecosystems. *Method*: Particle tracking runs to simulate material originating from the river (dissolved or particulate), following the fate of material released at the Målselv river mouth into the Malangen fjord and eventually entering the Norwegian Sea. *Results*: Seasonal and interannual variation in residence time of river material, spatial extent of river material. Differences between dissolved (neutral) and particulate (sinking) material. *Discussion*: Inputs from rivers to coast, potential ecological effects (light and nutrient availability, stratification). Our results highlight that strong seasonality in residence time and distribution of riverine material will shape the potential for both near-coast processing, removal and biological uptake of riverine organic matter and nutrients; as well as the potential for river-derived material to reshape light, OM and nutrient availability in waters further offshore."
+abstract: "**Abstract**: *Introduction:* Climate change effects on riverine input in coastal ecosystems.Nutrients that can influence coastal productivity, and particulate and dissolved material that can cause coastal darkening. *Method*: Particle tracking runs to simulate material originating from the river (dissolved or particulate), following the fate of material released at the Målselv river mouth into the Malangen fjord and eventually entering the Norwegian Sea. *Results*: Seasonal and interannual variation in residence time of riverin material, spatial extent of riverin material. Differences between dissolved (neutral) and particulate (sinking) material. *Discussion*: Inputs from rivers to coast, potential ecological effects (light and nutrient availability, stratification). Our results highlight that strong seasonality in residence time and distribution of riverine material will shape the potential for both near-coast processing, removal and biological uptake of riverine organic matter and nutrients; as well as the potential for river-derived material to reshape light, OM and nutrient availability in waters further offshore."
 editor_options: 
   chunk_output_type: console
   always_allow_html: true
@@ -55,7 +55,7 @@ library(ggmap)
 library(tidyverse)
 library(sp)
 library(raster)
-library(captioner)
+#library(captioner)
 library(knitr)
 library(grid)
 library(gridExtra)
@@ -101,15 +101,15 @@ maparea_zoom <- ggplot() +
 figs <- captioner(prefix="Figure")
 
 
-study_area <- figs(name="study_area","Study area. The background map shows the location of the study area (black rectangle), and the inset shows the details of the study area. The black points show the particle release area at the mouth of the Målselv river. The colored boxes and dashed line show the limits of subareas used to quantify the distribution of river material (Outside: north of the Outer box).")
+study_area <- figs(name="study_area","Study area. The background map shows the location of the study area (black rectangle), and the inset shows the details of the study area. The black points show the particle release area at the mouth of the Målselv river. The colored boxes and dashed line show the limits of subareas used to quantify the distribution of riverin material (Outside: the Norwegian Sea outside the Outer box).")
 
-particle_release <- figs(name="particle_release","Number of particles released per day (A), the cumulative number of particles during the run (B), and the river volume flux per date for 2018 (C) and 2019 (D). The released particles (A) were scaled by the river volume flux (C, D) to represent the amount of river material. Panels A and B are illustrated for one year, but the setup is the same for both years.")
+particle_release <- figs(name="particle_release","Number of particles released per day (A), the cumulative number of particles during the run (B), and the river volume flux per date for 2018 (C) and 2019 (D). The released particles (A) were scaled by the river volume flux (C, D) to represent the temporal variation in the amount of riverine material. Panels A and B are illustrated for one year, but the setup is the same for both years.")
 
-particle_depth <- figs(name="particle_depth","Mean depth of particles per day throughout the different runs (not weighted by water volume at day of release), with 25 % and 75 % percentiles of the data indicated as grey shading.")
+particle_depth <- figs(name="particle_depth","Depth distribution of particles per day of the simulation (counting from 1st of February) throughout the study area for the different simulations. The output from the two simulated years are combined. The median and relative depth (depth of the particle as percentage of the total water column depth, were 0 is at the surface and 100 at the sea floor) are shown as black lines, with 25 % and 75 % percentiles indicated as grey shading.")
 
-num_particles <- figs(name="num_particles","Cumulative distribution of river material during the simulations (counting all particles that have passed through a grid cell, with particles weighted by river water volume flux at the day of release). The top panels show the full distribution and the lower panels a zoomed-in view of the Malangen system (indicated with a black rectangle in the upper panel). Runs for two years with neutrally buoyant or sinking particles are compared. Note that the color scale has been truncated to a maximum of 15 000 for all panels to facilitate visualization and comparison (the maximum value for a single grid cell is indicated in the title).")
+num_particles <- figs(name="num_particles","Cumulative distribution of riverine material during the simulations (counting all particles that have passed through a grid cell, with particles weighted by river water volume flux at the day of release). The top panels show the full distribution and the lower panels a zoomed-in view of the Malangen system (indicated with a black rectangle in the upper panel). Runs for two years with neutrally buoyant or sinking particles are compared. Note that the color scale has been truncated to a maximum of 15 000 for all panels to facilitate visualization and comparison (the maximum value for a single grid cell is indicated in the title).")
 
-num_particles_day <- figs(name="num_particles_day","Distribution of river water material in the study area at the first day of every 2nd month during the simulation (counting all particles that are in a grid cell that day, weighting particles by river water volume flux at the day of release). Runs with neutrally buoyant and sinking particles are compared (different columns). Note that the color scale has been truncated to a maximum of 100 to allow comparison and visualization (the maximum value for a single for a single grid cell is indicated per panel).")
+num_particles_day <- figs(name="num_particles_day","Distribution of riverine material in the study area at the first day of every 2nd month during the simulation (counting all particles that are in a grid cell that day, weighting particles by river water volume flux at the day of release). Runs with neutrally buoyant and sinking particles are compared (different columns). Note that the color scale has been truncated to a maximum of 100 to allow comparison and visualization (the maximum value for a single for a single grid cell is indicated per panel).")
 
 num_particles_box <- figs(name="num_particles_box","Sum of material (number of particles weighted by volume) present within each subregion of the study area per day during the simulation, color-coded by release month. Note, the different colors do not overlap but are stacked vertically.")
 
@@ -261,10 +261,8 @@ middle_box_lat = c(69.357645, 69.438920)
 outer_box_lon = c(17.823399, 18.718452)
 outer_box_lat = c(69.438921, 69.571700)
 
-# outer_box_lon = c(17.308940, 18.135973)
-# outer_box_lat = c(69.571701, 69.71448)
-
-outside_lat <-  69.571701
+outside_box_lon = c(5, 18.76)
+outside_box_lat = c(69.571701, 74)
 
 #Set resolution 
 reso <- c(0.01,0.005)
@@ -296,13 +294,13 @@ localRaster <- raster(resolution = reso, xmn=min(local_box_lon), xmx=max(local_b
 *	Seasonal variation (spring freshet, degree of wind mixing)
 
 ## Aims
-For a northern Norwegian case study site (Malangen), use high-resolution particle-tracking modeling to study the seasonality of river outflow and residence time of river water in the fjord to better understand the potential effect of seasonality and high flow events for fjord biogeochemistry and coastal darkening.  
+For a northern Norwegian case study site (Malangen), use high-resolution particle-tracking modeling to study the seasonality of river outflow and residence time of river material in the fjord to better understand the potential effect of seasonality and high flow events for fjord biogeochemistry and coastal darkening.  
         
 
 # Methods
 
 ## Study area
-The study area encompasses the mouth of the Målselv river in Northern Norway and the downstream Malangen fjord that can transport river water out into the Norwegian Sea (`r figs("study_area", display = "cite")`). This river fjord system has been the subject of previous observational studies focusing on organic matter and nutrient dynamics along the freshwater-marine continuum, providing valuable background data for the current study (e.g. Frigstad et al. 2020, Schultze et al. 2022). The study area was divided into five different subareas at varying distancedifferent subareas at varying distance from the river mouth to study the flux of river water and residence time.  
+The study area encompasses the mouth of the Målselv river in Northern Norway and the downstream Malangen fjord that can transport riverine material out into the Norwegian Sea (`r figs("study_area", display = "cite")`). This river fjord system has been the subject of previous observational studies focusing on organic matter and nutrient dynamics along the freshwater-marine continuum, providing valuable background data for the current study (e.g. Frigstad et al. 2020, Schultze et al. 2022). The study area was divided into five sub-areas at varying distances from the river mouth to study the flux and residence time of riverine material.  
 
 ```{r study_area, fig.cap = study_area, fig.height = 4, fig.width = 7}
 #Plot distribution at release
@@ -320,7 +318,9 @@ zoomed <- maparea_all +
   geom_text(aes(x = min(middle_box_lon), y = max(middle_box_lat-0.02), label = "Middle box"),size = 4, vjust = 0, hjust = 0) +
   geom_rect(aes(xmin = min(outer_box_lon), xmax = max(outer_box_lon), ymin = min(outer_box_lat), ymax = max(outer_box_lat)), alpha=0.1, fill="blue") +
   geom_text(aes(x = min(outer_box_lon), y = max(outer_box_lat-0.02), label = "Outer box"),size = 4, vjust = 0, hjust = 0) +
-  geom_hline(yintercept= outside_lat, linetype="dashed") +
+   geom_rect(aes(xmin = min(outside_box_lon), xmax = max(outside_box_lon), ymin = min(outside_box_lat), ymax = max(outside_box_lat)), 
+             colour="black", fill=NA, linetype="dashed") +
+  #geom_hline(yintercept= outside_lat, linetype="dashed") +
   geom_text(aes(x = min(outer_box_lon)-0.1, y = outside_lat+0.01, label = "Outside"),size = 4, vjust = 0, hjust = 0)+
   geom_point(data=dat  %>% filter(day==1),
              aes(x = lon, y = lat), size=0.1,color="black")  +
@@ -333,9 +333,21 @@ overview + annotation_custom(ggplotGrob(zoomed), xmin = 15, xmax = 31,
 ```
 
 ## Simulating drift of material from river to ocean
-We released particles in a band from 18.538°E/69.308°N to 18.506°E/69.306°N representing a cross-section of the river mouth of the Målselv river (`r figs("study_area", display = "cite")`). The particles were distributed randomly at depths between 0 and 5 m. We started the particle drift simulation on the 1st of February for each of two years (2018, 2019) and followed the drift of particles until the end of the same year (31st of December, i.e., each year was simulated separately). We released 100 particles per day from the 1^st^ of February until the end of September, i.e., a total of 24 200 particles per year (`r figs("particle_release", display = "cite")`).   
+To investigate the spatial distribution and residence time of material originating from the Målselv river in the downstream Malangen fjord, we coupled an ocean circulation model to a Lagrangian particle tracking model where the simulated particles represent different types of riverine material. We simulated two different types of particles, representing dissolved and particulate material, respectively. Dissolved material was modeled by specifying that particles are neutrally buoyant, i.e., following the vertical water movement in the ocean model, while particulate material was modeled by specifying that particles are negatively buoyant, i.e., being influenced by the vertical water movement but simultaneously sinking towards the seafloor. We used sinking speeds of 0.3 or 0.8 mm/s, representing typical silt and sand particles with grain sizes of  0.05 and 0.2 mm, respectively, consistent with similar values observed in fjords and estuaries (Uncles et al. 2010, Meslard et al. 2018).
 
-To get a more realistic representation of the seasonal variation in outflow of river material, we scaled the particles by the total river water volume flux at the release day (vertically integrated mass transport, in m^3-s^), provided by the Norwegian Water Resources and Energy Directorate (NVE). I.e., the particles released at a specific day were weighted by the volume flux at that day, divided by the total number of particles released that day. In that way, particles released during the spring and summer flood period are given more weight in the analyses and the "amount" represented by the particles reflect the volume flux (`r figs("particle_release", display = "cite")`).  
+### Particle tracking model
+To model particle drift with ocean currents, we used the open-source software OpenDrift [@Dagestad2018]. OpenDrift is a framework for modeling the trajectories and fate of objects or substances drifting in the ocean, where different models can be used depending on the application. We used the basic OceanDrift module for tracking water masses or passive tracers. OpenDrift is available at github.com/OpenDrift/opendrift and the specific setup used here is available at github.com/trondkr/NOLA.  
+
+The particles (both neutrally buoyant and sinking) are influenced by vertical mixing, i.e., they move vertically according to eddy diffusivity and buoyancy, with vertical turbulent mixing being parameterized from wind speed (Sundby, 1983) (*the vertical diffusivity  included in the Norkyst files included some unrealistic values*). Additionally, the particles move vertically according to vertical ocean currents (vertical advection) (*has minimal impact compared to vertical turbulent mixing and could probably be ignored)*. We set the horizontal diffusivity in the simulations to 10 m ^2^/s (ref?). The resuspension threshold for sinking particles was set to a bottom current speed of 0.15 m/s, as shear stress is not included in the available forcing data. If particles hit the seafloor, they are moved back to the previous location, meaning that they can continue to move if the bottom current moves in a different direction at the next time step (we also tested a setup where particles were deactivated after hitting the seafloor, but then the simulation would halt after few timesteps). Similarly, particles that hit land during the simulation move back to their previous location in the ocean. We used a time step of 1 hour during the simulations. 
+
+### Ocean circulation model
+The particle tracking model was coupled offline to archived hydrodynamical data from a fjord model covering Malangen and the adjacent fjords and coastal areas using 160m x 160m resolution and 35 vertical levels. The free-surface, terrain-following, primitive equations ocean model ROMS [Regional Ocean Modeling System, http://myroms.org, @Shchepetkin2005, @Haidvogel2008] was applied to reproduce the fjord dynamics and hydrography. The circulation model was initialized on the 1st of March 2017 by model data from the Norwegian Coastal Model system NorKyst800 [presented in detail and validated by @Asplin2020 and operational data accessible at https://thredds.met.no provided by the Norwegian Meteorological Institute, MET-Norway]. Also, open boundary conditions were retrieved from NorKyst800. The atmospheric forcing was provided from AROME MetCoOp (Meteorological Co-operation on Operational Numerical Weather Prediction) 2.5km, the main forecasting system at the MET-Norway [@Muller2017]. Tides from TPXO7.2 global tidal analysis were included [@Egbert2002], and the daily river flow rates used were based on measurements from the NVE, i.e., the same river runoff data as applied in the scaling of the simulated particles. An identical model set up for a Norwegian fjord system further south (Hardangerfjorden) is presented in detail and validated in [@Dalsøren2020].  
+
+
+### Simulations
+We released particles in a band from 18.538°E/69.308°N to 18.506°E/69.306°N representing a cross-section of the river mouth of the Målselv river (`r figs("study_area", display = "cite")`). Initially, the particles were released at the sea surface (0 m depth). We started the particle drift simulation on the 1st of February for each of two years (2018, 2019) and followed the drift of particles until the end of the same year (31st of December, i.e., each year was simulated separately). We released 100 particles per day from the 1^st^ of February until the end of September, i.e., a total of 24 200 particles per year (`r figs("particle_release", display = "cite")`).   
+
+To get a more realistic representation of the seasonal variation in outflow of river material, we scaled the particles by the total river water volume flux at the release day (vertically integrated mass transport, in m^3-s^), provided by the Norwegian Water Resources and Energy Directorate (NVE). I.e., particles released at a specific day were weighted by the volume flux at that day, divided by the total number of particles released that day. In that way, particles released during the spring and summer flood period represent a larger amount of material than during periods of lower volume flux, even though the number of particles released remain the same (`r figs("particle_release", display = "cite")`).  
 
 ```{r particle_release, fig.cap = particle_release, fig.height = 6, fig.width = 7}
 
@@ -379,72 +391,63 @@ grid.arrange(newp, allp, volp2018, volp2019, ncol=2)
 
 ```
 
-To model particle drift with ocean currents, we used the open-source trajectory modelling framework OpenDrift [@Dagestad2018] which was coupled offline to archived hydrodynamical data from a fjord model covering Malangen and the adjacent fjords and coastal areas using 160m x 160m resolution and 35 vertical levels. The free-surface, terrain-following, primitive equations ocean model ROMS [Regional Ocean Modeling System, http://myroms.org, @Shchepetkin2005, @Haidvogel2008] was applied to reproduce the fjord dynamics and hydrography. The circulation model was initialized on the 1st of March 2017 by model data from the Norwegian Coastal Model system NorKyst800 [presented in detail and validated by @Asplin2020 and operational data accessible at https://thredds.met.no provided by the Norwegian Meteorological Institute, MET-Norway]. Also, open boundary conditions were retrieved from NorKyst800. The atmospheric forcing was provided from AROME MetCoOp (Meteorological Co-operation on Operational Numerical Weather Prediction) 2.5km, the main forecasting system at the MET-Norway [@Muller2017]. Tides from TPXO7.2 global tidal analysis were included [@Egbert2002], and the daily river flow rates used were based on measurements from the NVE, i.e., the same river runoff data as applied in the scaling of the simulated particles. An identical model set up for a Norwegian fjord system further south (Hardangerfjorden) is presented in detail and validated in [@Dalsøren2020].  
-
-We applied two different setups of the particle drift model, one setup where particles represent dissolved material and are neutrally buoyant (i.e., following the vertical movement of water) and one setup where particles represent particulate material and are negatively buoyant (i.e., being influenced by the vertical movement of water but also sinking towards the seafloor with a certain speed). For sinking particles, we tested sinking speeds of 0.3 and 0.8 mm/s, representing mud and sand particles, respectively, with grain size 0.05-0.2 mm (*references, Mike? for now I have only tested 0.3*). The resuspension threshold for sinking particles was set to 0.15 m/s (*references or more info, Mike?*).  
-
-For both the neutrally buoyant and sinking particles, we used the following settings in the particle tracking simulations (*this list is more for our own reference, we probably don't need all the detail in the manuscript...*):  
-
-* Particles that hit land move back to their previous location in the ocean
-* Vertical mixing was activated so that particles move vertically according to eddy diffusivity and buoyancy 
-* Vertical turbulent mixing was parameterized from wind speed (Sundby, 1983) - *this was included because the vertical diffusivity  included in the Norkyst files included some unrealistic values*
-* Vertical advection was activated so that particles are moved vertically according to vertical ocean currents *has minimal impact compared to vertical turbulent mixing and could probably be ignored. Kept for now*
-* Horizontal diffusivity was set to 10 m2/s  
 
 
-`r figs("particle_depth", display = "cite")` shows the mean depth of particles in the different runs (neutral vs. 0.3 mm/s sinking speed). Although sinking particles quickly reach a deeper mean depth than neutrally buoyant particles, sinking particles tend to stay in the upper 100 m and are never deactivated (*why is it so?*).  
+## Analyses
+
+Description of how the data were analyzed, visualized....  
+
+* Divide into material remaining in the upper surface layer (0-10 m), which will have the largest biological impacts in the water column, and water staying close to the sea floor (can be considered as settled out). 
+* Cumulative and monthly distribution of river material
+* Residence time of river material in the different boxes
+* Interannual differences/difference between neutral and buoyant particles
+
+
+# Results
+
+
+`r figs("particle_depth", display = "cite")` shows the depth distribution of particles in the different runs (neutral vs. 0.3 mm/s sinking speed). Although sinking particles quickly reach a deeper mean depth than neutrally buoyant particles, sinking particles tend to stay in the upper 100 m and are never deactivated.  
 
 ```{r particle_depth, fig.cap = particle_depth, fig.height = 4, fig.width = 7}
 
 plotlist <- list()
 
-for(year in years){
-  timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
-
-  for(x in 1:3){
-    run_name <- paste0(runs[x],"_",timespan)
+for(x in 1:3){
+    for(year in years){
+      # Combine data from 2018 and 2019
+      run_name <- paste0(runs[x],"_","2018-2-1-1_to_2018-12-31-1")
+      dat_2018 <- get(paste0(run_name,"_dat")) %>% 
+        filter(age != 0) 
+      
+      run_name <- paste0(runs[x],"_","2019-2-1-1_to_2019-12-31-1")
+      dat_2019 <- get(paste0(run_name,"_dat")) %>% 
+        filter(age != 0) 
     
-    plot_dep <- get(paste0(run_name,"_dat")) %>% 
-      filter(age != 0) %>%
-     ggplot(aes(x=date, y=depth))+ 
+      dat_comb <- rbind(dat_2018, dat_2019) 
+    }
+      # Plot absolute depth:
+      plot_dep <- dat_comb  %>% 
+        ggplot(aes(x=day, y=depth))+ 
     # Plot mean + confidence interval:
     # stat_summary(geom="ribbon", fun.data=mean_cl_normal, fill="grey")+
     # stat_summary(geom="line", fun=mean)+
    # Plot median + upper/lower quantiles:
-   stat_summary(geom="ribbon", fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), fill = "light grey") + 
+        stat_summary(geom="ribbon", fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), fill = "light grey") + 
     stat_summary(geom="line", fun=median)+
-    coord_cartesian(ylim = c(-130, -10)) +
+    coord_cartesian(ylim = c(-130, 0)) +
     theme_minimal() +
     theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
-    ggtitle(paste0(year,": ", run_name_short[x]))
+    ggtitle(run_name_short[x])
 
     if(x == 1){
-    plot_dep <- plot_dep + ylab("Mean particle depth") 
+    plot_dep <- plot_dep + ylab("Median depth distribution") 
     }
 
-    plotlist <- append(plotlist, list(plot_dep)) 
-  }
-}
-
-grid.arrange(grobs = plotlist, ncol = 3)  
-
-```
-
-```{r relative_particle_depth, fig.cap = particle_depth, fig.height = 4, fig.width = 7}
-
-plotlist <- list()
-
-for(year in years){
-  timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
-
-  for(x in 1:3){
-    run_name <- paste0(runs[x],"_",timespan)
-    
-    plot_dep <- get(paste0(run_name,"_dat")) %>% 
-      filter(age != 0) %>%
+    # Plot relative depth:
+      plot_relative_dep <- dat_comb  %>% 
       mutate(relative_depth = round(100*(abs(depth)/bottom_depth)))  %>%
       mutate(relative_depth=replace(relative_depth, relative_depth > 100,100))  %>%
-    ggplot(aes(x=date, y=relative_depth))+ 
+    ggplot(aes(x=day, y=relative_depth))+ 
    # Plot mean + confidence interval:
     # stat_summary(geom="ribbon", fun.data=mean_cl_normal, fill="grey")+
     # stat_summary(geom="line", fun=mean)+
@@ -453,32 +456,21 @@ for(year in years){
     stat_summary(geom="line", fun=median)+
      coord_cartesian(ylim = c(100, 0)) +
     theme_minimal() +
-    theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
-    ggtitle(paste0(year,": ", run_name_short[x]))
+    theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) 
 
     if(x == 1){
-    plot_dep <- plot_dep + ylab("Relative particle depth") 
+    plot_relative_dep <- plot_relative_dep + ylab("Relative depth distribution") 
     }
 
-    plotlist <- append(plotlist, list(plot_dep)) 
+    plotlist <- append(plotlist, list(plot_dep, plot_relative_dep)) 
   }
-}
 
-grid.arrange(grobs = plotlist, ncol = 3)  
+grid.arrange(grobs = plotlist, ncol = 3, as.table = TRUE)  
 
 ```
 
 
-## Analyses
 
-Description of how the data were analyzed, visualized....  
-
-* Cumulative and monthly distribution of river material
-* Residence time of river material in the different boxes
-* Interannual differences/difference between neutral and buoyant particles
-
-
-# Results
 Cumulatively over the course of the year (February to December), material originating from the Målselv river is distributed throughout the Malangen fjord system, into the Norwegian Sea and north along the Norwegian coast (`r figs("num_particles", display = "cite")`). The highest concentration of material originating from the river is found locally along the eastern coast of inner fjord area, in addition to within the release area (where all river water passes through initially, `r figs("num_particles", display = "cite")`). Comparing neutrally buoyant and sinking material, a higher fraction of the sinking material is kept within the inner fjord system, while much of the neutrally buoyant material is spread throughout and outside the study system.   
 
 
@@ -1038,12 +1030,12 @@ for(year in years){
 
 
 all_perc <- bind_cols(bind_rows(perc_Dissolved_2018, perc_Dissolved_2019), 
-                      bind_rows(perc_Mud_2018[,-c(1:3)], perc_Mud_2019[,-c(1:3)]), 
+                      bind_rows(perc_Clay_2018[,-c(1:3)], perc_Clay_2019[,-c(1:3)]), 
                       bind_rows(perc_Sand_2018[,-c(1:3)], perc_Sand_2019[,-c(1:3)]))
 
 tab <- flextable(all_perc) %>% 
   set_header_labels(values = c("Year","Month","N",rep(c("Local","Inner","Middle","Outer","Outside"),3)))  %>% 
-  add_header_row(values = c("", "Dissolved", "Mud", "Sand"),  colwidths = c(3, 5, 5, 5))  %>% 
+  add_header_row(values = c("", "Dissolved", "Clay", "Sand"),  colwidths = c(3, 5, 5, 5))  %>% 
   colformat_num(j = 1,  big.mark = "") %>% 
   vline(j = c(3,8,13))  %>% 
   hline(i = 10) %>% 

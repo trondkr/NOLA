@@ -73,7 +73,7 @@ o.set_config('drift:vertical_mixing',True) # Move particles vertically according
 o.set_config('vertical_mixing:diffusivitymodel', 'windspeed_Sundby1983') # Vertical diffusivity is included in the Norkyst files, but giving unrealistic values, using this instead
 o.set_config('drift:vertical_advection',True) # Move particles vertically according to vertical ocean currents, negligable compared to vertical diffusivity
 o.set_config('drift:horizontal_diffusivity', 10) # Horizontal diffusion in m2/s, to compensate for movements not resolved by the ocean model
-o.set_config('general:seafloor_action', 'previous') # Deactivate: Particles that hit the seafloor are deactivated. Can only happen with sinking. 
+o.set_config('general:seafloor_action', 'previous') # ‘previous’: particles are moved back to previous location. 
 
 if sinkingParticles:
     o.set_config('vertical_mixing:resuspension_threshold', .15) # 0.2 is now set to default
@@ -87,7 +87,7 @@ if sinkingParticles:
 
 #### Seeding setup
 N = 100 # Number of particles
-z = np.random.uniform(-5, -0.1, N) # Particle release depth between -5 and surface - adding depth seems to cause an error with seed_cone
+z = np.random.uniform(-5, -0.1, N) # Particle release depth between -5 and surface - adding depth seems to cause an error with seed_cone, particles are only released at surface. OK for now
 #Seed in cone at the mouth of Måselv
 lon_m_outer_e = [18.5382232] 
 lat_m_outer_e = [69.3079802] 
