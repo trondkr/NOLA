@@ -73,7 +73,7 @@ firstDayMonth=function(x)
   first=as.Date(paste(row.names(y),y,sep="-"))
 }
 
-
+run_name_short <- c("Dissolved","Silt","Sand")
 # Map basics
 landcol<-"gray91"#"darkslategrey"
 oceancol<-"white" #"deepskyblue4"
@@ -432,7 +432,7 @@ for(x in 1:3){
     # stat_summary(geom="ribbon", fun.data=mean_cl_normal, fill="grey")+
     # stat_summary(geom="line", fun=mean)+
    # Plot median + upper/lower quantiles:
-        stat_summary(geom="ribbon", fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), fill = "light grey") + 
+        stat_summary(geom="ribbon", fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), fill = "light grey") + ylab("") +
     stat_summary(geom="line", fun=median)+
     coord_cartesian(ylim = c(-130, 0)) +
     theme_minimal() +
@@ -454,7 +454,7 @@ for(x in 1:3){
    # Plot median + upper/lower quantiles:
    stat_summary(geom="ribbon", fun.min = function(x) quantile(x, 0.25), fun.max = function(x) quantile(x, 0.75), fill = "light grey") + 
     stat_summary(geom="line", fun=median)+
-     coord_cartesian(ylim = c(100, 0)) +
+     coord_cartesian(ylim = c(100, 0)) +  ylab("") +
     theme_minimal() +
     theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) 
 
@@ -465,7 +465,7 @@ for(x in 1:3){
     plotlist <- append(plotlist, list(plot_dep, plot_relative_dep)) 
   }
 
-grid.arrange(grobs = plotlist, ncol = 3, as.table = TRUE)  
+grid.arrange(grobs = plotlist, ncol = 3, as.table = FALSE)  
 
 ```
 
