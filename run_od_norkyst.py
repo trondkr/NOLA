@@ -18,7 +18,7 @@ from opendrift.models.oceandrift import OceanDrift
 from opendrift.models.sedimentdrift import SedimentDrift
 
 #### Define run
-year = '2019'
+year = '2020'
 startDay= year + '-2-1-1'
 endDay=year + '-12-31-1'
 #endDay=year + '-2-2-1'
@@ -26,7 +26,7 @@ startTime = datetime.strptime(startDay, '%Y-%m-%d-%H')
 endTime = datetime.strptime(endDay, '%Y-%m-%d-%H')
 print ("Run planned from %s to %s"%(startTime,endTime))
 
-sinkingParticles = True
+sinkingParticles = False
 
 if sinkingParticles:
     run_name = 'sinkingParticles'
