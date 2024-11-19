@@ -20,7 +20,9 @@ library(grid)
 library(gridExtra)
 library(zoo)
 library(flextable)
-
+library(scales)
+library(ggbreak)
+library(aplot)
 
 # Function to find first day of given month
 firstDayMonth=function(x)
@@ -45,17 +47,17 @@ maparea_all <- ggplot() +
   geom_polygon(data = map_data("worldHires"), aes(x = long, y = lat, group = group), # Change to worldHires later
                colour = landcol, fill = landcol) +
   coord_cartesian(xlim = c(16.1, 21.8), ylim = c(69.2, 70.35) ) + 
-  theme(axis.title.x=element_blank(),axis.title.y=element_blank(),
-        panel.background=element_rect(fill = oceancol, colour = oceancol),
-        panel.grid.major=element_blank(),panel.grid.minor=element_blank(),
-        panel.border = element_rect(colour = "black", fill=NA, size=0.5)) 
+  theme_void() +
+  theme(panel.background=element_rect(fill = oceancol, colour = oceancol),
+        panel.border = element_rect(colour = "black", fill=NA, linewidth = 0.5)) 
 
 
 maparea_zoom <- ggplot() +
   geom_polygon(data = map_data("worldHires"), aes(x = long, y = lat, group = group), # Change to worldHires later
                colour = landcol, fill = landcol) +
   coord_cartesian(xlim = c(17.7, 19.2), ylim = c(69.28, 69.7) ) + 
-  theme(axis.title.x=element_blank(),axis.title.y=element_blank(),
+  ylab("Latitude (°E)") + xlab("Longitude (°N)") +
+  theme(#axis.title.x=element_blank(),axis.title.y=element_blank(),
         panel.background=element_rect(fill = oceancol, colour = oceancol),
         panel.grid.major=element_blank(),panel.grid.minor=element_blank(),
         panel.border = element_rect(colour = "black", fill=NA, size=0.5)) 
@@ -116,8 +118,7 @@ for(i in 1:2){
     
   # Remove particles after age 150 days drift / end of September - the sinking runs were terminated at day 274) 
   dat <- dat %>%
-    filter(age<=150) %>%
-    filter(day<274) 
+    filter(age<=93)
 
   assign(paste0(run_name,"_dat"), dat)
   rm(resultfile, DriftFile, timesteps, days_timestep, timesteps_days, timesteps_days_rounded, release_month, status, lon, lat, depth, age_seconds, age_days, datevector)
@@ -219,14 +220,30 @@ localRaster <- raster(resolution = reso, xmn=min(local_box_lon), xmx=max(local_b
 
 ```{r study_area}
 #Plot distribution at release
-overview <- maparea_all +
-  coord_cartesian(xlim = c(5, 30), ylim = c(59, 72))  +   
-  geom_rect(linewidth=1, aes(xmin = 17.4, xmax = 19.25, ymin = 69.25, ymax= 69.7), fill=NA,color="black") 
+
+
+# NOT WORKING:
+# test<-raster("C:/Users/KVI/OneDrive - NIVA/SharkMove_local/Analyses/data/gis/GEBCO_29_Oct_2024/gebco_2024_n71.8506_s66.1816_w8.2178_e22.8955.tif")
+# saveRDS(test,"C:/Users/KVI/OneDrive - NIVA/SharkMove_local/Analyses/data/gis/GEBCO_29_Oct_2024/GEBCO_29_Oct_2024.rds", version = 2)
+# 
+# options(ggOceanMaps.userpath = "C:/Users/KVI/OneDrive - NIVA/SharkMove_local/Analyses/data/gis/GEBCO_29_Oct_2024/")
+# 
+# ggOceanMaps::basemap(limits = c(17.4, 19.25,69.25, 69.7), bathymetry = T, land.col = landcol, legends = TRUE, bathy.style = "rub") 
+
 
 txtsize <- 5
 alphaval <- 0.4
 
-zoomed <- maparea_all +
+
+overview <- maparea +
+  coord_cartesian(xlim = c(5, 29), ylim = c(59, 72))  +   
+  geom_rect(linewidth=1, aes(xmin = 17.4, xmax = 19.25, ymin = 69.25, ymax= 69.7), fill=NA,color="black") +
+  theme(axis.title.x=element_blank(),axis.title.y=element_blank(),
+        axis.text.x=element_blank(),axis.text.y=element_blank(),
+        axis.ticks.x=element_blank(),axis.ticks.y=element_blank())
+
+
+zoomed <- maparea +
   coord_cartesian(xlim = c(17.4, 19.25), ylim = c(69.25, 69.7)) + 
   geom_rect(aes(xmin = min(local_box_lon), xmax = max(local_box_lon), ymin = min(local_box_lat), ymax = max(local_box_lat)), alpha=alphaval, fill=colorcodes_areas[1]) +
   geom_text(aes(x = min(local_box_lon)-0.1, y = mean(local_box_lat), label = "Local"),size = txtsize, vjust = 0, hjust = 0)+
@@ -246,8 +263,11 @@ zoomed <- maparea_all +
   geom_segment(aes(x = max(local_box_lon)+0.03, y = min(local_box_lat)-0.03, xend = mean(local_box_lon)+0.01, yend = min(local_box_lat)-0.002),
                arrow = arrow(length = unit(0.2, "cm")))
 
-study_area <- overview + annotation_custom(ggplotGrob(zoomed), xmin = 15, xmax = 31, 
-                       ymin = 58.5, ymax = 67)
+# study_area <- overview + annotation_custom(ggplotGrob(zoomed), xmin = 15, xmax = 31, 
+#                        ymin = 58.5, ymax = 67)
+
+study_area <- zoomed + annotation_custom(ggplotGrob(overview), xmin = 17.28, xmax = 18.0, 
+                       ymin = 69.22, ymax = 69.4)
 
 ggsave(study_area, file="../Figures/study_area.jpg", width = 180, height = 160, units = "mm", dpi = 300)
 
@@ -259,8 +279,9 @@ Total volume flux, vertical distribution of particles and percentage of particle
 
 ```{r vol_and_dist}
 
-txtsize <- 6
+txtsize <- 8
 plotlist <- list() 
+yupper <- c(90,82)
 
 for(year in years){
   timespan<-paste0(year,"-1-1-1_to_",year,"-12-31-1")
@@ -269,16 +290,27 @@ for(year in years){
   
   transport_y <- transport  %>%
     filter(release_date >= min(dat$date) & release_date <=  max(dat$date)) %>%
-    mutate(day = as.numeric(format(release_date, "%j")))
+    mutate(day = as.numeric(format(release_date, "%j")))  %>%
+    mutate(month = as.numeric(format(release_date, "%m")))
   
 # Total river volume
    plot_vol <- ggplot(data=transport_y, aes(x=day, y=transport)) +
      geom_bar(stat="identity", fill ="black", width = 0.5) +
      ylim(c(0,1220)) +
+     scale_x_continuous(breaks = seq(15,360,by=30), labels = month.abb[seq(1,12)])  + 
+     #scale_x_date(date_breaks = "months", labels = scales::label_date_short()) + 
      ylab("Total vol. flux (m3/d)") + xlab("Day") +
-     ggtitle(year) +
      theme_classic() + 
-     theme(text=element_text(size=txtsize), axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) + xlab("") 
+     theme(text=element_text(size=txtsize)) + xlab("") 
+   
+   # Add label
+    if(year == years[1]){
+      plot_vol <- plot_vol +
+       ggtitle(paste0("A. ",year, " volume flux")) 
+     } else {
+      plot_vol <- plot_vol +
+       ggtitle(paste0("B. ",year, " volume flux")) 
+    } 
    
    plotlist <- append(plotlist, list(plot_vol)) 
 
@@ -288,44 +320,14 @@ for(year in years){
       # Fixing issue with some particles jumping to the surface/getting bottom depth 0 for silt particles
         mutate(bottom_depth = na_if(bottom_depth, 0)) %>%
         mutate(depth = ifelse(is.na(bottom_depth), NA, depth))
-       
-  # Plot absolute depth and bottom depth:
-  # dep_day <- dat %>% 
-  #   filter(!is.na(depth)) %>% 
-  #   group_by(month,day) %>%  
-  #   summarise(lower_dep = quantile(depth, c(0.25)),
-  #             med_dep = quantile(depth, c(0.5)),
-  #             upper_dep = quantile(depth, c(0.75)))
-  # 
-  # bottom_day <- dat %>% 
-  #   group_by(day) %>%  
-  #   filter(!is.na(bottom_depth)) %>% 
-  #   summarise(lower_dep = quantile(-bottom_depth, c(0.25)),
-  #             med_dep = quantile(-bottom_depth, c(0.5)),
-  #             upper_dep = quantile(-bottom_depth, c(0.75)))  %>% 
-  #   filter(day != 1)
-  # 
-  #  plot_dep <- ggplot()  + 
-  #     geom_ribbon(dat=dep_day, aes(x=day, ymin=lower_dep, ymax=upper_dep) ,alpha = 0.2) +
-  #     geom_line(dat=dep_day, aes(x=day, y=med_dep)) + 
-  #     coord_cartesian(ylim = c(-130, 0)) +
-  #     # Add bottom depth
-  #     geom_line(dat = bottom_day, aes(x=day, y= med_dep), col = "red") + 
-  #     ggtitle(run_name_short[x]) +
-  #     theme_minimal() +
-  #     theme(text=element_text(size=txtsize), axis.text.x=element_text(angle=90,hjust=1,vjust=0.5),
-  #               axis.title.y.right = element_text(color = "red")) +
-  #    xlab("Day of simulation") + ylab("Particle depth / bottom depth") 
      
-     # Plot % of particles present per box per month of simulation (1st day of month), scaled up by volume 
-     dat <- dat  %>% 
-       filter(month_day == 15) 
-   
+     # Plot % of particles present per box per month of simulation, scaled up by volume 
+      
+    # Sum up the volume of material per month (averaged over all days in the month)
     count_all <- dat %>% 
-        group_by(month) %>% 
-        summarise(tot_vol = sum(transport))
-        #tally() 
-    
+        group_by(month, month_day) %>% 
+        summarise(tot_vol = sum(transport)) 
+
     for(i in c("local","adjacent","inner","outer")){
       lon_i <- get(paste0(i,"_box_lon"))
       lat_i <- get(paste0(i,"_box_lat"))
@@ -333,8 +335,7 @@ for(year in years){
       count_i <- dat %>% 
         filter(lon>min(lon_i) & lon<max(lon_i)) %>% 
         filter(lat>min(lat_i) & lat<max(lat_i)) %>%
-        group_by(month) %>% 
-        #tally() %>%
+        group_by(month, month_day) %>% 
         summarise(vol_i = sum(transport)) %>% 
         rename(!!i:= vol_i)
       
@@ -348,20 +349,20 @@ for(year in years){
     count_outside <- dat %>% 
      # filter(lat>min(outside_lat) & lon<min(outside_lon) | lat>max(outside_lat) & lon<max(outside_lon)) %>% 
       filter(lat>min(outside_lat)) %>% 
-              group_by(month) %>% 
+        group_by(month, month_day) %>% 
         summarise(vol_i = sum(transport)) %>% 
-        #tally() %>%
         rename(outside = vol_i) 
     
     count_all <- count_all %>%
         left_join(count_outside) %>%
       mutate(across(c("local":"outside"),
-           .fns = ~round(100*./tot_vol,2)))
+           .fns = ~round(100*./tot_vol,2)))  %>%
+      group_by(month) %>% 
+      summarise(across(c("local":"outside"), ~ mean(.x, na.rm = TRUE)))
     
     rm(count_outside)
     
     plot_perc <-  count_all  %>%
-      dplyr::select(-"tot_vol") %>%
       pivot_longer(cols = !month,
                       names_to = "Area",
                       values_to = "Fraction") %>%    
@@ -369,28 +370,65 @@ for(year in years){
       ggplot(aes(month, Fraction)) +   
       geom_bar(aes(fill = Area), position = "dodge", stat="identity") + 
       scale_fill_manual(values=colorcodes_areas) + 
-      scale_x_continuous(breaks = seq(1,9))  + 
-      ylim(c(0,85)) +
+      scale_x_continuous(breaks = seq(1,12), labels = month.abb[seq(1,12)])  + 
+      ylim(c(0,yupper[x])) +
       xlab("Month") + ylab("Percentage in area") +
       ggtitle(run_name_short[x]) +
       theme_classic() + theme(text=element_text(size=txtsize), legend.position = "null")
       
+    #Break y-axis
+     if(x==2){
+      plot_perc <- plot_perc +
+      scale_y_break(c(16,60)) 
+    } 
+    
     # Add legend
     if(year == years[1] & x ==1){
       plot_perc <- plot_perc +
-  theme(legend.position = c(.6, .9), legend.title = element_blank(), 
+  theme(legend.position = c(.5, .9), legend.title = element_blank(), 
         legend.text = element_text(size = 6), legend.direction = "horizontal", legend.key.size = unit(0.4, 'cm'))
     }
 
+    # Add label
+    if(year == years[1] & x ==1){
+      plot_perc <- plot_perc +
+       ggtitle(paste0("C. ",year, " ",run_name_short[x])) 
+      } else if (year == years[1] & x ==2) {
+      plot_perc <- plot_perc +
+       ggtitle(paste0("E. ",year, " ",run_name_short[x])) 
+      } else if (year == years[2] & x ==1) {
+        plot_perc <- plot_perc +
+       ggtitle(paste0("D. ",year, " ",run_name_short[x])) 
+     }  else {
+      plot_perc <- plot_perc +
+       ggtitle(paste0("F. ",year," ",run_name_short[x])) 
+    } 
+    
  plotlist <- append(plotlist, list(plot_perc)) 
 } # Run
 } # Year 
      
 
-vol_and_dist <- grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:6),ncol=2,byrow=FALSE))
-
+vol_and_dist <- plot_list(gglist=plotlist, ncol=2,byrow=FALSE)
 ggsave(vol_and_dist, file="../Figures/vol_and_dist.jpg", width = 180, height = 180, units = "mm", dpi = 300)
 
+
+# Create table
+# all_perc <- bind_cols(bind_rows(perc_Dissolved_2018, perc_Dissolved_2019), 
+#                       bind_rows(perc_Clay_2018[,-c(1:3)], perc_Clay_2019[,-c(1:3)]), 
+#                       bind_rows(perc_Sand_2018[,-c(1:3)], perc_Sand_2019[,-c(1:3)]))
+# 
+# tab <- flextable(all_perc) %>% 
+#   set_header_labels(values = c("Year","Month","N",rep(c("Local","Adjacent","Inner","inner","outer"),3)))  %>% 
+#   add_header_row(values = c("", "Dissolved", "Clay", "Sand"),  colwidths = c(3, 5, 5, 5))  %>% 
+#   colformat_num(j = 1,  big.mark = "") %>% 
+#   vline(j = c(3,8,13))  %>% 
+#   hline(i = 10) %>% 
+#   rotate(j=1,rotation="btlr") %>% 
+#   merge_v(j = 1)   %>% 
+#   align(align = "center", part = "header")
+# 
+# tab
 
 ```
 
@@ -398,8 +436,8 @@ Residence time per box (Difference between first and last time within box) and t
 
 ```{r residence_and_time_to_reach_box}
 
-ylims <- c(0,155)
-txtsize <- 6
+ylims <- c(0,95)
+txtsize <- 8
 
 plotlist <- list()
 
@@ -407,7 +445,7 @@ for(year in years){
   timespan<-paste0(year,"-1-1-1_to_",year,"-12-31-1")
   for(x in 1:2){
     dat <- get(paste0(runs[x],"_",timespan,"_dat"))
-    
+
     # Plot time to reach box
     for(i in c("adjacent","inner","outer")){
       lon_i <- get(paste0(i,"_box_lon"))
@@ -433,17 +471,18 @@ for(year in years){
     
     firstday_all <- rbind(firstday_adjacent, firstday_inner,
                            firstday_outer, firstday_outside)  %>%
-      mutate(release_month = factor(release_month, levels=c(1:7)),
+      mutate(release_month = factor(release_month, levels=c(1:9)),
              region = factor(region, levels =c("adjacent","inner","outer","outside")))
     
-    print(firstday_all %>% 
-      group_by(region, release_month) %>% 
-      summarise(med_day = median(firstday), max_day = max(firstday)), n=50)
+    # print(firstday_all %>% 
+    #   group_by(region, release_month) %>% 
+    #   summarise(med_day = median(firstday), max_day = max(firstday)), n=50)
     
     plot_x <- 
       ggplot(data=firstday_all, aes(x=release_month, y=firstday, fill=region)) +
       geom_boxplot(size=0.1, outlier.size=0.1) +
       scale_fill_manual(values=colorcodes_areas[-1]) + 
+      scale_x_discrete(breaks = seq(1,9), labels = month.abb[seq(1,9)])  + 
       ylim(ylims) + 
       xlab("") + ylab("") +
       theme_classic() + theme(legend.position = "null",  text=element_text(size=txtsize))
@@ -454,23 +493,20 @@ for(year in years){
         ylab("Time to reach")
     }
    
-    # Year and run to upper row
-      if(x == 1){
+     # Add label
+    if(year == years[1] & x ==1){
+       plot_x <- plot_x +
+           ggtitle(label=paste0("A. ",year), subtitle = run_name_short[x])
+             } else if (year == years[2] & x ==1) {
         plot_x <- plot_x +
-           ggtitle(label=year, subtitle = run_name_short[x])
-      }
-      
-    # Run to subsequent rows
-      if(x %in% c(2,3)){
+           ggtitle(label=paste0("B. ",year), subtitle = run_name_short[x])
+        } else if (year == years[1] & x ==2) {
         plot_x <- plot_x +
-          ggtitle(label=run_name_short[x])
-      }
-    
-    # Legend to first plot
-    if(year == years[1] & x == 1){
+       ggtitle(paste0("E. ",year), subtitle = run_name_short[x])
+     }  else {
       plot_x <- plot_x +
-        theme(legend.position = c(.6, 1.2), legend.title = element_blank(), 
-              legend.text = element_text(size = 6), legend.direction = "horizontal", legend.key.size = unit(0.6, 'cm')) }
+       ggtitle(paste0("F. ",year), subtitle = run_name_short[x])
+     } 
     
     plotlist <- append(plotlist, list(plot_x))
 
@@ -500,13 +536,14 @@ for(year in years){
       mutate(region = "outside")
     
     residence_all <- rbind(residence_local, residence_adjacent, residence_inner, residence_outer, residence_outside)  %>%
-      mutate(release_month = factor(release_month, levels=c(1:7)),
+      mutate(release_month = factor(release_month, levels=c(1:9)),
              region = factor(region, levels =c("local","adjacent","inner","outer","outside")))
     
     plot_x <- 
       ggplot(data=residence_all, aes(x=release_month, y=residence, fill=region)) +
       geom_boxplot(size=0.1, outlier.size=0.1) +
       scale_fill_manual(values=colorcodes_areas) + 
+     scale_x_discrete(breaks = seq(1,9), labels = month.abb[seq(1,9)])  + 
       ylim(ylims) + 
       xlab("") + ylab("") +
       theme_classic() + theme(legend.position = "null", text=element_text(size=txtsize))
@@ -517,7 +554,27 @@ for(year in years){
         ylab("Residence time")
     }
     
-   
+         # Add label
+    if(year == years[1] & x ==1){
+       plot_x <- plot_x +
+           ggtitle(label=paste0("C. ",year), subtitle = run_name_short[x])
+             } else if (year == years[2] & x ==1) {
+        plot_x <- plot_x +
+           ggtitle(label=paste0("D. ",year), subtitle = run_name_short[x])
+        } else if (year == years[1] & x ==2) {
+        plot_x <- plot_x +
+       ggtitle(paste0("G. ",year), subtitle = run_name_short[x])
+     }  else {
+      plot_x <- plot_x +
+       ggtitle(paste0("H. ",year), subtitle = run_name_short[x])
+     } 
+
+    # Legend to last plot
+    if(year == years[2] & x == 2){
+      plot_x <- plot_x +
+        theme(legend.position = c(.45, -0.22), legend.title = element_blank(), 
+              legend.text = element_text(size = txtsize), legend.direction = "horizontal", legend.key.size = unit(0.6, 'cm')) }
+    
   
      plotlist <- append(plotlist, list(plot_x))
       rm(list=ls(pattern="residence_"))
@@ -527,6 +584,188 @@ for(year in years){
 time_and_residence <- grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:8),ncol=2,byrow=FALSE), bottom=textGrob("Release month"))
 
 ggsave(time_and_residence, file="../Figures/time_and_residence.jpg", width = 180, height = 200, units = "mm", dpi = 300)
+
+```
+
+Statistical tests, effect of volume at time to reach/residence time?
+```{r stats_residence_and_time_to_reach_box}
+
+# Calculate moving window of water volume transport (from release day and 4 following days)
+# Log-transform to reduce influence of outliers?
+
+transport <- transport %>% 
+       mutate(transport_movavg = rollapply(transport, width = 5, FUN= mean, align = 'left', fill = NA)) %>%
+ mutate(transport_movavg = log(transport_movavg))
+
+newdat_firstday <- data.frame(transport_movavg=seq(min(transport$transport_movavg, na.rm=T),max(transport$transport_movavg, na.rm=T),length.out=100), region=rep(c("adjacent","inner","outer","outside"),each=100)) %>%
+  mutate(region = factor(region, levels =c("adjacent","inner","outer","outside")))
+    
+
+newdat_residence <- data.frame(transport_movavg=seq(min(transport$transport_movavg, na.rm=T),max(transport$transport_movavg, na.rm=T),length.out=100), region=rep(c("local","adjacent","inner","outer","outside"),each=100)) %>%
+  mutate(region = factor(region, levels =c("local","adjacent","inner","outer","outside")))
+
+txtsize <- 8
+
+plotlist <- list()
+
+for(year in years){
+  timespan<-paste0(year,"-1-1-1_to_",year,"-12-31-1")
+  for(x in 1:2){
+    dat <- get(paste0(runs[x],"_",timespan,"_dat"))  %>% 
+      mutate(release_date = as.Date(release_date))
+
+    # Find time to reach box
+    for(i in c("adjacent","inner","outer")){
+      lon_i <- get(paste0(i,"_box_lon"))
+      lat_i <- get(paste0(i,"_box_lat"))
+      
+      firstday_i <- dat %>% 
+        filter(lon>min(lon_i) & lon<max(lon_i)) %>% 
+        filter(lat>min(lat_i) & lat<max(lat_i)) %>%
+        group_by(ID, release_date) %>% 
+        summarise(firstday = min(age)) %>%
+        mutate(region = i)  %>%
+        left_join(transport)
+      
+      assign(paste0("firstday_", i), firstday_i)
+      rm(firstday_i)
+    }
+      
+    # For outside area: 
+    firstday_outside <- dat %>% 
+      filter(lat>min(outside_lat)) %>% 
+      group_by(ID, release_date) %>% 
+      summarise(firstday = min(age)) %>%
+      mutate(region = "outside")  %>%
+        left_join(transport)
+    
+    firstday_all <- rbind(firstday_adjacent, firstday_inner,
+                           firstday_outer, firstday_outside)  %>%
+      mutate(region = factor(region, levels =c("adjacent","inner","outer","outside")))
+    
+    mod_firstday <- gam(firstday ~ s(transport_movavg, by=region, k = 4) + region, data = firstday_all)
+    newdat_firstday$firstday <- predict.gam(mod_firstday, newdata = newdat_firstday) 
+    
+    plot_x <- ggplot(data = newdat_firstday, aes(x=transport_movavg, y = firstday, color=region)) +
+      geom_line() +
+      scale_color_manual(values=colorcodes_areas[-1]) + 
+      ylim(c(0,60)) + 
+      ylab("") +
+      theme_classic() + theme(legend.position = "null",
+                          axis.title.x=element_blank())
+
+    # Asterix if significant
+    # if(summary(mod_firstday)$s.table[4]<0.05){
+    #   ast <- "*"
+    # } else { ast <- ""}
+    
+    # Ylab first year
+    if(year == years[1]){
+      plot_x <- plot_x +
+        ylab("Time to reach")
+    }
+   
+     # Add label
+    if(year == years[1] & x ==1){
+       plot_x <- plot_x +
+           ggtitle(label=paste0("A. ",year), subtitle = paste0(run_name_short[x],ast))
+             } else if (year == years[2] & x ==1) {
+        plot_x <- plot_x +
+           ggtitle(label=paste0("B. ",year), subtitle = paste0(run_name_short[x],ast))
+        } else if (year == years[1] & x ==2) {
+        plot_x <- plot_x +
+       ggtitle(paste0("E. ",year), subtitle = paste0(run_name_short[x],ast))
+     }  else {
+      plot_x <- plot_x +
+       ggtitle(paste0("F. ",year), subtitle = paste0(run_name_short[x],ast))
+     } 
+    
+    plotlist <- append(plotlist, list(plot_x))
+
+    rm(list=ls(pattern="firstday_"))
+      
+    # Find residence time
+    for(i in c("local","adjacent","inner","outer")){
+      lon_i <- get(paste0(i,"_box_lon"))
+      lat_i <- get(paste0(i,"_box_lat"))
+      
+      residence_i <- dat %>% 
+        filter(lon>min(lon_i) & lon<max(lon_i)) %>% 
+        filter(lat>min(lat_i) & lat<max(lat_i)) %>%
+        group_by(ID, release_date) %>% 
+        summarise(residence = max(age+1)-min(age)) %>%
+        mutate(region = i) %>%
+        left_join(transport)
+      
+      assign(paste0("residence_", i), residence_i)
+      rm(residence_i)
+    }
+      
+    # For outside area: 
+    residence_outside <- dat %>% 
+      filter(lat>min(outside_lat)) %>% 
+        group_by(ID, release_date) %>% 
+      summarise(residence = max(age+1)-min(age)) %>%
+      mutate(region = "outside") %>%
+        left_join(transport)
+    
+    residence_all <- rbind(residence_local, residence_adjacent, residence_inner, residence_outer, residence_outside)  %>%
+      mutate(region = factor(region, levels =c("local","adjacent","inner","outer","outside")))
+    
+    mod_residence <- gam(residence ~ s(transport_movavg, by=region, k = 4) + region, data = residence_all)
+    
+    newdat_residence$residence <- predict.gam(mod_residence, newdata = newdat_residence) 
+    
+    # Asterix if significant
+    # if(summary(mod_residence)$s.table[4]<0.05){
+    #   ast <- "*"
+    # } else { ast <- ""}
+    
+    plot_x <- ggplot(data = newdat_residence, aes(x=transport_movavg, y = residence, color=region)) +
+      geom_line() +
+      scale_color_manual(values=colorcodes_areas) + 
+      ylim(0,90) + 
+      ylab("") +
+      theme_classic() + theme(legend.position = "null",
+                          axis.title.x=element_blank())
+    # Ylab to first year  
+    if(year == years[1]){
+      plot_x <- plot_x +
+        ylab("Residence time")
+    }
+    
+      # Add label
+    if(year == years[1] & x ==1){
+       plot_x <- plot_x +
+           ggtitle(label=paste0("C. ",year), subtitle = paste0(run_name_short[x],ast))
+             } else if (year == years[2] & x ==1) {
+        plot_x <- plot_x +
+           ggtitle(label=paste0("D. ",year), subtitle = paste0(run_name_short[x],ast))
+        } else if (year == years[1] & x ==2) {
+        plot_x <- plot_x +
+       ggtitle(paste0("G. ",year), subtitle = paste0(run_name_short[x],ast))
+     }  else {
+      plot_x <- plot_x +
+       ggtitle(paste0("H. ",year), subtitle = paste0(run_name_short[x],ast))
+     } 
+
+    # Legend to last plot
+    if(year == years[2] & x == 2){
+      plot_x <- plot_x +
+        theme(legend.position = c(.45, -0.22), legend.title = element_blank(), 
+              legend.text = element_text(size = txtsize), legend.direction = "horizontal", legend.key.size = unit(0.6, 'cm')) }
+    
+  
+     plotlist <- append(plotlist, list(plot_x))
+      rm(list=ls(pattern="residence_"))
+  } # Run
+} # Year
+
+time_and_residence_mods <- grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:8),ncol=2,byrow=FALSE), bottom=textGrob("Volume flux (log(m3/day))"))
+
+ggsave(time_and_residence_mods, file="../Figures/time_and_residence_mods.jpg", width = 180, height = 200, units = "mm", dpi = 300)
+
+
 
 ```
 
@@ -580,6 +819,35 @@ Time to reach box: First day within box, plotted per release month and particle 
 
 ## OLD STUFF ##
 ```{r particle_depth, eval=FALSE}
+
+# Plot absolute depth and bottom depth:
+  # dep_day <- dat %>% 
+  #   filter(!is.na(depth)) %>% 
+  #   group_by(month,day) %>%  
+  #   summarise(lower_dep = quantile(depth, c(0.25)),
+  #             med_dep = quantile(depth, c(0.5)),
+  #             upper_dep = quantile(depth, c(0.75)))
+  # 
+  # bottom_day <- dat %>% 
+  #   group_by(day) %>%  
+  #   filter(!is.na(bottom_depth)) %>% 
+  #   summarise(lower_dep = quantile(-bottom_depth, c(0.25)),
+  #             med_dep = quantile(-bottom_depth, c(0.5)),
+  #             upper_dep = quantile(-bottom_depth, c(0.75)))  %>% 
+  #   filter(day != 1)
+  # 
+  #  plot_dep <- ggplot()  + 
+  #     geom_ribbon(dat=dep_day, aes(x=day, ymin=lower_dep, ymax=upper_dep) ,alpha = 0.2) +
+  #     geom_line(dat=dep_day, aes(x=day, y=med_dep)) + 
+  #     coord_cartesian(ylim = c(-130, 0)) +
+  #     # Add bottom depth
+  #     geom_line(dat = bottom_day, aes(x=day, y= med_dep), col = "red") + 
+  #     ggtitle(run_name_short[x]) +
+  #     theme_minimal() +
+  #     theme(text=element_text(size=txtsize), axis.text.x=element_text(angle=90,hjust=1,vjust=0.5),
+  #               axis.title.y.right = element_text(color = "red")) +
+  #    xlab("Day of simulation") + ylab("Particle depth / bottom depth") 
+  
 
 plotlist <- list()
 
@@ -643,368 +911,6 @@ grid.arrange(grobs = plotlist, ncol = 3, as.table = FALSE)
 
 ```
 
-% of particles present per box per month of simulation (1st day of month)
-```{r perc_within_box, eval=FALSE}
-
-plotlist <- list() 
-
-for(year in years){
-  timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
-  for(x in 1:3){
-    dat <- get(paste0(runs[x],"_",timespan,"_dat")) %>%
-      mutate(year = year(date), month = month(date), month_day = day(date))  %>% 
-      filter(month_day == 1 & month > 2) 
-    
-    count_all <- dat %>% 
-        group_by(month) %>% 
-        tally() 
-    
-    for(i in c("local","adjacent","inner","outer")){
-      lon_i <- get(paste0(i,"_box_lon"))
-      lat_i <- get(paste0(i,"_box_lat"))
-      
-      count_i <- dat %>% 
-        filter(lon>min(lon_i) & lon<max(lon_i)) %>% 
-        filter(lat>min(lat_i) & lat<max(lat_i)) %>%
-        group_by(month) %>% 
-        tally() %>%
-        rename(!!i:= n)
-      
-      count_all <- count_all  %>%
-        left_join(count_i)
-
-      rm(count_i)
-    }
-      
-    # For outer area: 
-    count_outer <- dat %>% 
-      filter(lat>min(outer_box_lat) & lon<min(outer_box_lon) | lat>max(outer_box_lat) & lon<max(outer_box_lon)) %>% 
-              group_by(month) %>% 
-        tally() %>%
-        rename(outer =n) 
-    
-    count_all <- count_all %>%
-        left_join(count_outer) %>%
-      mutate(across(c("local":"outer"),
-           .fns = ~round(100*./n,2)))
-    
-    rm(count_outer)
-    
-    plot_x <-  count_all  %>%
-      dplyr::select(-"n") %>%
-      pivot_longer(cols = !month,
-                      names_to = "Area",
-                      values_to = "Fraction") %>%    
-      mutate(Area = factor(Area, levels =c("local","adjacent","inner","outer","outer"))) %>%
-      ggplot(aes(month, Fraction)) +   
-      geom_bar(aes(fill = Area), position = "dodge", stat="identity") + 
-      scale_x_continuous(breaks = seq(3,12))  + 
-      xlab("") + ylab("") +
-      theme_classic() + theme(legend.position = "null")
-      
-    # Legend to last plot
-    if(year == years[2] & x == 3){
-      plot_x <- plot_x +
-        theme(legend.position = c(.85, .9), legend.title = element_blank(), 
-              legend.text = element_text(size = 8))
-    }
-    
-    # Add run to upper row
-      if(year == years[1]){
-        plot_x <- plot_x +
-          ggtitle(run_name_short[x])
-      }
-      
-      # Add year to left column
-      if(x == 1){
-        plot_x <- plot_x +
-          ylab(year)
-      }
-      
-      plotlist <- append(plotlist, list(plot_x))
-
-    # count_all  <- count_all %>%
-    #   mutate(year = year) %>%
-    #   relocate(year, .before = month)
-    # 
-    # assign(paste0("perc_", run_name_short[x],"_",year), count_all)
-    
-    rm(count_all)
-  } # Run
-} # Year
-
-grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:6),ncol=3,byrow=TRUE),
-             left=textGrob("Percentage in area", rot=90), bottom=textGrob("Month"))
-
-# Create table
-# all_perc <- bind_cols(bind_rows(perc_Dissolved_2018, perc_Dissolved_2019), 
-#                       bind_rows(perc_Clay_2018[,-c(1:3)], perc_Clay_2019[,-c(1:3)]), 
-#                       bind_rows(perc_Sand_2018[,-c(1:3)], perc_Sand_2019[,-c(1:3)]))
-# 
-# tab <- flextable(all_perc) %>% 
-#   set_header_labels(values = c("Year","Month","N",rep(c("Local","Adjacent","Inner","inner","outer"),3)))  %>% 
-#   add_header_row(values = c("", "Dissolved", "Clay", "Sand"),  colwidths = c(3, 5, 5, 5))  %>% 
-#   colformat_num(j = 1,  big.mark = "") %>% 
-#   vline(j = c(3,8,13))  %>% 
-#   hline(i = 10) %>% 
-#   rotate(j=1,rotation="btlr") %>% 
-#   merge_v(j = 1)   %>% 
-#   align(align = "center", part = "header")
-# 
-# tab
-
-```
-
-
-Cumulatively over the course of the year (February to December), material originating from the Målselv river is distributed throughout the Malangen fjord system, into the Norwegian Sea and north along the Norwegian coast (`r figs("num_particles", display = "cite")`). The highest concentration of material originating from the river is found locally along the eastern coast of inner fjord area, in addition to within the release area (where all river water passes through initially, `r figs("num_particles", display = "cite")`). Comparing neutrally buoyant and sinking material, a higher fraction of the sinking material is kept within the inner fjord system, while much of the neutrally buoyant material is spread throughout and outer the study system.   
-
-```{r time_to_reach_box, eval=FALSE}
-
-ylims <- c(0,334)
-
-plotlist <- list()
-
-for(year in years){
-  timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
-  for(x in 1:3){
-    dat <- get(paste0(runs[x],"_",timespan,"_dat"))
-    
-    for(i in c("adjacent","inner","outer")){
-      lon_i <- get(paste0(i,"_box_lon"))
-      lat_i <- get(paste0(i,"_box_lat"))
-      
-      firstday_i <- dat %>% 
-        filter(lon>min(lon_i) & lon<max(lon_i)) %>% 
-        filter(lat>min(lat_i) & lat<max(lat_i)) %>%
-        group_by(ID, release_month) %>% 
-        summarise(firstday = min(age)) %>%
-        mutate(region = i)
-      
-      assign(paste0("firstday_", i), firstday_i)
-      rm(firstday_i)
-    }
-      
-    # For outer area: 
-    firstday_outer <- dat %>% 
-      filter(lat>outer_lat) %>% 
-      group_by(ID, release_month) %>% 
-      summarise(firstday = min(age)) %>%
-      mutate(region = "outer")
-    
-    firstday_all <- rbind(firstday_adjacent, firstday_inner,
-                           firstday_outer, firstday_outer)  %>%
-      mutate(release_month = factor(release_month, levels=c(2:9)),
-             region = factor(region, levels =c("adjacent","inner","outer","outer")))
-    
-    plot_x <- 
-      ggplot(data=firstday_all, aes(x=release_month, y=firstday, fill=region)) +
-      geom_boxplot(size=0.1, outlier.size=0.1) +
-      ylim(ylims) + 
-      xlab("") + ylab("") +
-      theme_classic() + theme(legend.position = "null")
-      
-    # Legend run to first plot
-    if(year == years[1] & x == 1){
-      plot_x <- plot_x +
-        theme(legend.position = c(.85, .9), legend.title = element_blank(), 
-              legend.text = element_text(size = 8))
-    }
-    
-    # Add run to upper row
-      if(year == years[1]){
-        plot_x <- plot_x +
-          ggtitle(run_name_short[x])
-      }
-      
-      # Add year to left column
-      if(x == 1){
-        plot_x <- plot_x +
-          ylab(year)
-      }
-      
-      plotlist <- append(plotlist, list(plot_x))
-  } # Run
-} # Year
-
-grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:6),ncol=3,byrow=TRUE),
-             left=textGrob("Time to reach area (days)", rot=90), bottom=textGrob("Release month"))
-
-
-```
-
-```{r time_to_reach_box_upper, fig.cap = residence_time_box, fig.height = 8, fig.width = 9}
-deplim <- -10
-
-ylims <- c(0,300)
-
-# Function to count the number of data points
-n_fun <- function(x){
-    return(data.frame(y = max(ylims),
-                      label = length(x)))
-}
-
-plotlist <- list()
-
-for(year in years){
-  timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
-  for(x in 1:3){
-    dat <- get(paste0(runs[x],"_",timespan,"_dat"))
-    
-    for(i in c("adjacent","inner","outer")){
-      lon_i <- get(paste0(i,"_box_lon"))
-      lat_i <- get(paste0(i,"_box_lat"))
-      
-      firstday_i <- dat %>% 
-        filter(lon>min(lon_i) & lon<max(lon_i)) %>% 
-        filter(lat>min(lat_i) & lat<max(lat_i)) %>%
-        group_by(ID) %>% 
-        mutate(firstday = min(age), days_below_deplim = sum(depth < deplim))  %>%
-        filter(days_below_deplim == 0) %>%
-        mutate(region = i)
-      
-      assign(paste0("firstday_", i), firstday_i)
-      rm(firstday_i)
-    }
-      
-     firstday_all <- rbind(firstday_inner, firstday_inner,
-                           firstday_outer)  %>%
-      mutate(region = factor(region, levels =c("inner","inner","outer")))
-    
-    plot_x <- 
-      ggplot(data=firstday_all, aes(x=region, y=firstday, fill=region)) +
-      geom_boxplot(size=0.1, outlier.size=0.1) +
-      stat_summary(fun.data = n_fun, geom = "text", hjust = 0.5,
-                  position = position_dodge(width = 0.8)) +
-      ylim(ylims) + 
-      xlab("") + ylab("") +
-      theme_classic() + theme(legend.position = "null")
-      
-    # Legend run to first plot
-    if(year == years[1] & x == 1){
-      plot_x <- plot_x +
-        theme(legend.position = c(.15, .75), legend.title = element_blank(), 
-              legend.text = element_text(size = 8))
-    }
-    
-    # Add run to upper row
-      if(year == years[1]){
-        plot_x <- plot_x +
-          ggtitle(run_name_short[x])
-      }
-      
-      # Add year to left column
-      if(x == 1){
-        plot_x <- plot_x +
-          ylab(year)
-      }
-      
-      plotlist <- append(plotlist, list(plot_x))
-  } # Run
-} # Year
-
-grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:6),ncol=3,byrow=TRUE),
-             left=textGrob("Time to reach area (days)", rot=90))
-
-# Summarized for Maeve
-i <- "outer"
-lon_i <- get(paste0(i,"_box_lon"))
-lat_i <- get(paste0(i,"_box_lat"))
-    
-for(x in 1:3){
-    print(run_name_short[x])
-for(year in years){
-    timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
-    dat <- get(paste0(runs[x],"_",timespan,"_dat"))
-
-    firstday_i <- dat %>% 
-        filter(lon>min(lon_i) & lon<max(lon_i)) %>% 
-        filter(lat>min(lat_i) & lat<max(lat_i)) %>%
-        group_by(ID) %>% 
-        mutate(firstday = min(age), days_below_deplim = sum(depth < deplim))  %>%
-        filter(days_below_deplim == 0)
-    
-    print(year)
-    print(summary(firstday_i$firstday))
-    
-    }
-}
-    
-
-```
-
-```{r residence_time_box, eval=FALSE}
-
-ylims <- c(0,334)
-
-plotlist <- list()
-
-for(year in years){
-  timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
-  for(x in 1:3){
-    dat <- get(paste0(runs[x],"_",timespan,"_dat"))
-    
-    for(i in c("local","inner","inner","outer")){
-      lon_i <- get(paste0(i,"_box_lon"))
-      lat_i <- get(paste0(i,"_box_lat"))
-      
-      residence_i <- dat %>% 
-        filter(lon>min(lon_i) & lon<max(lon_i)) %>% 
-        filter(lat>min(lat_i) & lat<max(lat_i)) %>%
-        group_by(ID, release_month) %>% 
-        summarise(residence = max(age+1)-min(age)) %>%
-        mutate(region = i)
-      
-      assign(paste0("residence_", i), residence_i)
-      rm(residence_i)
-    }
-      
-    # For outer area: 
-    residence_outer <- dat %>% 
-      filter(lat>min(outer_box_lat) & lon<min(outer_box_lon) | lat>max(outer_box_lat) &
-                  lon<max(outer_box_lon)) %>% 
-      group_by(ID, release_month) %>% 
-      summarise(residence = max(age+1)-min(age)) %>%
-      mutate(region = "outer")
-    
-    residence_all <- rbind(residence_local, residence_inner, residence_inner, residence_outer, residence_outer)  %>%
-      mutate(release_month = factor(release_month, levels=c(2:9)),
-             region = factor(region, levels =c("local","inner","inner","outer","outer")))
-    
-    plot_x <- 
-      ggplot(data=residence_all, aes(x=release_month, y=residence, fill=region)) +
-      geom_boxplot(size=0.1, outlier.size=0.1) +
-      ylim(ylims) + 
-      xlab("") + ylab("") +
-      theme_classic() + theme(legend.position = "null")
-      
-    # Legendto first plot
-    if(year == years[1] & x == 1){
-      plot_x <- plot_x +
-        theme(legend.position = c(.85, .9), legend.title = element_blank(), 
-              legend.text = element_text(size = 8))
-    }
-    
-    # Add run to upper row
-      if(year == years[1]){
-        plot_x <- plot_x +
-          ggtitle(run_name_short[x])
-      }
-      
-      # Add year to left column
-      if(x == 1){
-        plot_x <- plot_x +
-          ylab(year)
-      }
-      
-      plotlist <- append(plotlist, list(plot_x))
-  } # Run
-} # Year
-
-grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:6),ncol=3,byrow=TRUE),
-             left=textGrob("Residence time (days)", rot=90), bottom=textGrob("Release month"))
-
-
-```
 
 ```{r num_particles, eval=FALSE}
 
@@ -1157,291 +1063,7 @@ grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:8,NA,9:16,25,17:24,NA),n
 
 ```
 
-```{r num_particles_day_upper, eval=FALSE}
-
-# `r figs("num_particles_day", display = "cite")` shows the distribution of water at the first day of each month of the simulation. *This figure could be moved to the supplementary material and potentially replaced by an animation.*  
-deplim <- -10
-
-plotlist <- list()
-zlims <- c(0,6.5)
-
-for(x in 1:3){
-  for(year in years){
-  timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
-  run_name <- paste0(runs[x],"_",timespan)
-  dat <- get(paste0(run_name,"_dat")) %>%
-    filter(depth > deplim)  
-
-  dat_sp <- SpatialPointsDataFrame(cbind(dat$lon,dat$lat), data=dat)
-  days <- firstDayMonth(unique(dat_sp$date))[c(3,5,7,9)]
-
-  for(i in 1:length(days)){
-    dat_i <- dat_sp[dat_sp$date==days[i],]
-    # Counting the number of particles:
-    # rasterNumParts <- rasterize(x=dat_i[,"ID"], y=fullRaster, fun="count")
-    # rasterNumParts <- as.data.frame(rasterNumParts , xy=T, na.rm=T)
-    # maxval <- max(rasterNumParts$ID)
-    
-    # Summing the volume of particles:
-    rasterNumParts <- rasterize(x=dat_i[,"vol_particle"], y=fullRaster, fun="sum")
-    rasterNumParts <- as.data.frame(rasterNumParts , xy=T, na.rm=T)
-    rasterNumParts$Number <- log(rasterNumParts$vol_particle+1)
-    #maxval <- max(rasterNumParts$Number)
-
-    dayplot <- maparea_all +
-      coord_cartesian(xlim = c(17.4, 19.25), ylim = c(69.25, 69.7)) + 
-      geom_raster(data = rasterNumParts, aes(x = x, y = y, fill=Number), interpolate = TRUE) +
-    scale_fill_gradientn(limits = zlims,
-                         na.value = "red", #na.value color same as color for max value
-                         colours = c("purple","blue", "green","yellow","orange","red"),
-                         name="Number") +
-    #ggtitle(paste0(days[i], "\nMax: ", round(maxval))) +
-    ggtitle(days[i]) +
-    theme(axis.text.x=element_blank(),
-          axis.ticks.x=element_blank(),
-          axis.title.x=element_blank(),
-          axis.text.y=element_blank(),
-          axis.ticks.y=element_blank(),
-          axis.title.y=element_blank(),
-          legend.position="none",
-          plot.margin = unit(c(-2,0,-0.5,0), "lines"),
-          plot.title=element_text(face="bold", margin=margin(t=40,b=-20)),
-          panel.border = element_rect(colour = "black", fill=NA, size=1))
-    
-    if(i == 1 & year == 2018){
-      dayplot <- dayplot +
-           labs(subtitle = run_name_short[x]) + 
-        theme(plot.title = element_text(vjust = -3),
-              plot.subtitle = element_text(face = "bold", hjust = 0.5))}
-
-
-    plotlist <- append(plotlist, list(dayplot)) 
-  } # Days
-  } # Year
-} # Run
-
-# Get legend
- lastplot <- maparea_all  +
-    geom_raster(data = rasterNumParts, aes(x = x, y = y, fill=Number), interpolate = TRUE) +
-    scale_fill_gradientn(limits = zlims,
-                         na.value = "red", #na.value color same as color for max value
-                         colours = c("purple","blue", "green","yellow","orange","red"), name="log(Volume)") +
-    theme(legend.direction = "horizontal") 
-
-  legend <- cowplot::get_legend(lastplot)
-  plotlist <- append(plotlist, list(legend))
  
-
-grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:8,NA,9:16,25,17:24,NA),ncol=3,byrow=FALSE), heights = c(rep(1,8),0.5))
-
-```
-
-To summarize the distribution of river material through time, `r figs("num_particles_box", display = "cite")` shows the sum of material present within each subarea of the study region (`r figs("study_area", display = "cite")`) per day during the simulation, separated into month of release. Little material is retained within the Local box while a larger fraction is retained within the Inner box, in particular for the sinking material. Material reaching the outer box seem to pass through this area relatively quickly compared to the Inner box. A larger fraction of neutrally buoyant material reaches the outer area (north of the outer box), compared to the sinking material.      
-
-```{r num_particles_box, eval=FALSE}
-
-plotlist <- list()
-ylims <- c(0,60000)
-
-for(year in years){
-timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
-  for(x in 1:2){
-  dat <- get(paste0(runs[x],"_",timespan,"_dat"))
-  xlims<-(c(min(dat$date),max(dat$date-1)))
-  dates_days <- get(paste0("dates_days",year))
- 
- for(i in c("local","inner","outer")){
-  lon_i <- get(paste0(i,"_box_lon"))
-  lat_i <- get(paste0(i,"_box_lat"))
-  
-  counts_i <- dat %>% 
-    filter(lon>min(lon_i) & lon<max(lon_i)) %>% 
-    filter(lat>min(lat_i) & lat<max(lat_i)) %>% 
-    group_by(day, release_month) %>% 
-    #tally() %>% # Counting number of particles
-    summarize(n = sum(vol_particle)) %>% # Counting number of particles weighted by volume
-    left_join(dates_days)  %>% 
-    rename(Month = release_month, Date = date) %>% 
-    mutate(Month = factor(Month, 
-                             levels = as.character(seq(2,9))))
-
-  
-  plot_i <- ggplot(data=counts_i, aes(x=Date,y=n,fill=Month,color=Month)) +
-                 geom_bar(stat="identity") +
-                 xlim(xlims) + ylim(ylims)+
-                ylab("") + 
-                theme_minimal() + theme(legend.position = "null",
-                axis.text.x=element_blank(),
-        axis.title.x=element_blank())
-  
-  # Add year to upper row
-  if(i == "local"){
-    plot_i <- plot_i + 
-      ggtitle(paste0(year,": ", str_to_sentence(gsub("\\P.*","",runs[x]))))  
-  }
-  
-  # Add indication of box to left column
-  if(year == years[1] & x == 1){
-    plot_i <- plot_i + 
-      ylab(str_to_sentence(paste0(i," box")))
-    }
-   
-  plotlist <- append(plotlist, list(plot_i))
- }
-  
-  # For outer area: 
-  counts_i <- dat %>% 
-  filter(lat>outer_lat) %>% 
-  group_by(day, release_month) %>% 
-  #tally() %>% # Counting number of particles
-  summarize(n = sum(vol_particle)) %>% # Counting number of particles weighted by volume
-  left_join(dates_days)  %>% 
-  rename(Month = release_month, Date = date) %>% 
-  mutate(Month = factor(Month, 
-                        levels = as.character(seq(2,9))))
-
-    plot_i <- ggplot(data=counts_i, aes(x=Date,y=n,fill=Month,color=Month)) +
-                 geom_bar(stat="identity") +
-                 xlim(xlims) + ylim(ylims)+
-                ylab("") + 
-                theme_minimal() + theme(legend.position = "null",
-                axis.text.x=element_text(angle=90,hjust=1,vjust=0.5),
-        axis.title.x=element_blank())
-    
-  # Add indication of box to left column
-  if(year == years[1] & x == 1){
-    plot_i <- plot_i + 
-      ylab("outer")
-    }
-   
-  plotlist <- append(plotlist, list(plot_i))
-
-  
-  
-  }
-}
- 
-# Add legend to last plot
-plot_legend <- ggplot(data=counts_i, aes(x=Date,y=n,fill=Month,color=Month)) +
-                 geom_bar(stat="identity") +
-                 xlim(xlims) + ylim(ylims)+
-                ylab("") + 
-                theme_minimal() + theme(legend.position = c(0.1,0.7),
-                axis.text.x=element_text(angle=90,hjust=1,vjust=0.5),
-        axis.title.x=element_blank())
-  
-                
-plotlist[[length(plotlist)]] <- plot_legend
- 
-grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:16),ncol=4,byrow=FALSE),
-            left=textGrob("Number of particles scaled by water volume", rot=90))
-
-# grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:16),ncol=4,byrow=FALSE),
-#              top=textGrob("Neutral              Sinking"), left=textGrob("Number of particles", rot=90))
-
-
-```
-
-
-
-There is a large degree of variation in residence time of river material in the different subareas, from a day or less to over 300 days (`r figs("residence_time_box", display = "cite")`). Although the longest residence time tended to occur when river volume transport at the release time was low, there was no clear statistical relationship between residence time and volume transport, i.e., increased volume transport does not necessarily lead to faster movement and lower residence time of particles in the subareas. There was on average a higher volume flux in 2019 compared to 2018.          
-
-```{r residence_time_box_vs_volume, eval=FALSE}
-
-# Calculate moving window of water volume transport (from release day and 4 following days)
-# Log-transform to reduce influence of outliers?
-
-transport <- transport %>% 
-       mutate(transport_movavg = rollapply(transport, width = 5, FUN= mean, align = 'left', fill = NA)) %>%
-  mutate(transport_movavg = log(transport_movavg))
-  
-
-xlims <- range(transport$transport_movavg, na.rm=T)
-ylims <- c(0,334)
-
-plotlist <- list()
-  
-for(year in years){
-  timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
-  for(x in 1:2){
-    dat <- get(paste0(runs[x],"_",timespan,"_dat"))
-
-   for(i in c("local","inner","outer")){
-    lon_i <- get(paste0(i,"_box_lon"))
-    lat_i <- get(paste0(i,"_box_lat"))
-    
-    counts_i <- dat %>% 
-      filter(lon>min(lon_i) & lon<max(lon_i)) %>% 
-      filter(lat>min(lat_i) & lat<max(lat_i)) %>% 
-      left_join(transport %>% mutate(release_date = as.character(release_date))) %>%
-      group_by(ID, transport_movavg, release_date, release_month) %>% 
-      tally() 
-    
-    plot_i <- ggplot(data=counts_i, aes(x=transport_movavg, y=n)) +
-  geom_point(size=0.05, color = "dark grey") +
-  #stat_summary(fun = mean, geom="line", colour="dark green") +
-  geom_smooth(method="gam", formula = y ~ s(x, bs = "cs"),
-              color = "black", se = FALSE) +
-  xlim(xlims) + 
-  ylim(ylims) + 
-  ylab("") +
-  theme_minimal() + theme(legend.position = "null",
-                          axis.text.x=element_blank(),
-                          axis.title.x=element_blank())
-
-        # Add year/run to upper row
-  if(i == "local"){
-    plot_i <- plot_i +
-      ggtitle(paste0(year,": ", str_to_sentence(gsub("\\P.*","",runs[x]))))
-  }
-
-  # Add indication of box to left column
-  if(year == years[1] & x == 1){
-    plot_i <- plot_i +
-      ylab(str_to_sentence(paste0(i," box")))
-  }
-
-    plotlist <- append(plotlist, list(plot_i))
-    } # Box
-    
-    
-  # For outer area: 
-  counts_i <- dat %>% 
-  filter(lat>outer_lat) %>% 
-   left_join(transport %>% mutate(release_date = as.character(release_date))) %>%
-      group_by(ID, transport_movavg, release_date, release_month) %>% 
-      tally() 
-
-    plot_i <- ggplot(data=counts_i, aes(x=transport_movavg, y=n)) +
-  geom_point(size=0.05, color = "dark grey") +
-  #stat_summary(fun = mean, geom="line", colour="dark green") +
-  geom_smooth(method="gam", formula = y ~ s(x, bs = "cs", k = 4),
-              color = "black", se = FALSE) +
-  xlim(xlims) + 
-  ylim(ylims) + 
-  ylab("") +
-  theme_minimal() + theme(legend.position = "null",
-                          axis.text.x= element_text(angle=90,hjust=1,vjust=0.5),
-                          axis.title.x=element_blank())
-    
-# Add indication of box to left column
-  if(year == years[1] & x == 1){
-    plot_i <- plot_i + 
-      ylab("outer")
-    }
-   
-  plotlist <- append(plotlist, list(plot_i))
-
-    
-  } # Run
-} # Year
- 
-grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:16),ncol=4,byrow=FALSE),
-            left=textGrob("Residence time (days)", rot=90), bottom=textGrob("Total volume flux (m3/d)"))
-
-
-```
-
 ```{r age_particles_day, eval=FALSE}
 
 days <- firstDayMonth(unique(dat_sp$date))[seq(2,10,by=2)]
@@ -1502,9 +1124,6 @@ grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:12),ncol=2,byrow=FALSE),
 ```
 
 
-# Discussion
-
-# Acknowledgements
 
 # Supplemental figures
 To assess if releasing 100 particles per day is sufficient to capture the general distribution patterns, we compared results for the 2018-simulation with neutrally buoyant particles to a run with 10 particles released per day. Increasing the number of particles released per day from 10 to 100 leads to a smoother cumulative distribution of river material in the fjord system and a larger total extent of material into the outer area, but the main patterns remain the same.   
@@ -1641,4 +1260,3 @@ grid.arrange(grobs = plotlist, layout_matrix = matrix(c(1:6),nrow=3,byrow=FALSE)
 ```
 
 
-# References
