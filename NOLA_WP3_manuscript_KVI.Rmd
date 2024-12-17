@@ -10,6 +10,7 @@ setwd("C:/NOLA-SIS_lokal/NOLA")
 library(ncdf4)
 library(maps)
 library(mapdata)
+library(marmap)
 library(ggmap)
 library(tidyverse)
 library(sp)
@@ -23,6 +24,7 @@ library(flextable)
 library(scales)
 library(ggbreak)
 library(aplot)
+library(mgcv)
 
 # Function to find first day of given month
 firstDayMonth=function(x)
@@ -34,16 +36,18 @@ firstDayMonth=function(x)
   first=as.Date(paste(row.names(y),y,sep="-"))
 }
 
-run_name_short <- c("Dissolved","Sinking")
+run_name_short <- c("Dissolved","Particulate")
 
-colorcodes_areas <- c("#FF7F50","#8B8B00","#008B45", "#56B4E9","#DA70D6")
+colorcodes_areas <- c("#FF7F50","#8B8B00","#008B45", "#DA70D6","#56B4E9")
 
 
 # Map basics
 landcol<-"gray91"#"darkslategrey"
-oceancol<-"white" #"deepskyblue4"
+oceancol <-"white"
+bat <- getNOAA.bathy(17.4, 19.25,69.25, 69.75, res = 0.1, keep = FALSE)
+bat_xyz <- as.xyz(bat)
 
-maparea_all <- ggplot() +
+maparea <- ggplot() +
   geom_polygon(data = map_data("worldHires"), aes(x = long, y = lat, group = group), # Change to worldHires later
                colour = landcol, fill = landcol) +
   coord_cartesian(xlim = c(16.1, 21.8), ylim = c(69.2, 70.35) ) + 
@@ -51,16 +55,17 @@ maparea_all <- ggplot() +
   theme(panel.background=element_rect(fill = oceancol, colour = oceancol),
         panel.border = element_rect(colour = "black", fill=NA, linewidth = 0.5)) 
 
-
 maparea_zoom <- ggplot() +
+  geom_tile(data = bat_xyz, aes(x = V1, y = V2, fill = V3)) + 
+  scale_fill_distiller(limits=c(-500,50), na.value = "white") + 
   geom_polygon(data = map_data("worldHires"), aes(x = long, y = lat, group = group), # Change to worldHires later
                colour = landcol, fill = landcol) +
   coord_cartesian(xlim = c(17.7, 19.2), ylim = c(69.28, 69.7) ) + 
   ylab("Latitude (°E)") + xlab("Longitude (°N)") +
-  theme(#axis.title.x=element_blank(),axis.title.y=element_blank(),
-        panel.background=element_rect(fill = oceancol, colour = oceancol),
-        panel.grid.major=element_blank(),panel.grid.minor=element_blank(),
-        panel.border = element_rect(colour = "black", fill=NA, size=0.5)) 
+  theme(legend.title = element_blank(),
+    panel.background=element_rect(fill = oceancol, colour = oceancol),
+    panel.grid.major=element_blank(),panel.grid.minor=element_blank(),
+    panel.border = element_rect(colour = "black", fill=NA, size=0.5)) 
 
 ```
 
@@ -202,17 +207,6 @@ outer_box_lat = c(69.438921, 69.571700)
 outside_lon = c(18.76,25)
 outside_lat = c(69.571701, 70.1)
 
-#Set resolution 
-reso <- c(0.01,0.005)
-
-#Creating raster for full study area (note, reducing full area to remove particles that meet the borders of NorKyst)
-i<-1 
-dat <- get(paste0(runs[i],"_",timespan,"_dat"))
-
-fullRaster <- raster(resolution = reso, xmn=16.1, xmx=21.8, ymn=69.2, ymx=70.35)
-
-localRaster <- raster(resolution = reso, xmn=min(local_box_lon), xmx=max(local_box_lon), ymn=min(local_box_lat), ymx=max(local_box_lat))
-
 
 ```
 
@@ -222,18 +216,7 @@ localRaster <- raster(resolution = reso, xmn=min(local_box_lon), xmx=max(local_b
 #Plot distribution at release
 
 
-# NOT WORKING:
-# test<-raster("C:/Users/KVI/OneDrive - NIVA/SharkMove_local/Analyses/data/gis/GEBCO_29_Oct_2024/gebco_2024_n71.8506_s66.1816_w8.2178_e22.8955.tif")
-# saveRDS(test,"C:/Users/KVI/OneDrive - NIVA/SharkMove_local/Analyses/data/gis/GEBCO_29_Oct_2024/GEBCO_29_Oct_2024.rds", version = 2)
-# 
-# options(ggOceanMaps.userpath = "C:/Users/KVI/OneDrive - NIVA/SharkMove_local/Analyses/data/gis/GEBCO_29_Oct_2024/")
-# 
-# ggOceanMaps::basemap(limits = c(17.4, 19.25,69.25, 69.7), bathymetry = T, land.col = landcol, legends = TRUE, bathy.style = "rub") 
-
-
 txtsize <- 5
-alphaval <- 0.4
-
 
 overview <- maparea +
   coord_cartesian(xlim = c(5, 29), ylim = c(59, 72))  +   
@@ -243,19 +226,18 @@ overview <- maparea +
         axis.ticks.x=element_blank(),axis.ticks.y=element_blank())
 
 
-zoomed <- maparea +
+zoomed <- maparea_zoom +
   coord_cartesian(xlim = c(17.4, 19.25), ylim = c(69.25, 69.7)) + 
-  geom_rect(aes(xmin = min(local_box_lon), xmax = max(local_box_lon), ymin = min(local_box_lat), ymax = max(local_box_lat)), alpha=alphaval, fill=colorcodes_areas[1]) +
+  geom_rect(aes(xmin = min(local_box_lon), xmax = max(local_box_lon), ymin = min(local_box_lat), ymax = max(local_box_lat)),  color=colorcodes_areas[1], fill=NA, lwd=1.5) +
   geom_text(aes(x = min(local_box_lon)-0.1, y = mean(local_box_lat), label = "Local"),size = txtsize, vjust = 0, hjust = 0)+
-  geom_rect(aes(xmin = min(adjacent_box_lon), xmax = max(adjacent_box_lon), ymin = min(adjacent_box_lat), ymax = max(adjacent_box_lat)), alpha=alphaval, fill=colorcodes_areas[2]) +
+  geom_rect(aes(xmin = min(adjacent_box_lon), xmax = max(adjacent_box_lon), ymin = min(adjacent_box_lat), ymax = max(adjacent_box_lat)),  color=colorcodes_areas[2], fill=NA, lwd=1.5) +
   geom_text(aes(x = mean(adjacent_box_lon)-0.1, y = mean(adjacent_box_lat), label = "Adjacent"),size = txtsize, vjust = 0, hjust = 0)+
-  geom_rect(aes(xmin = min(inner_box_lon), xmax = max(inner_box_lon), ymin = min(inner_box_lat), ymax = max(inner_box_lat)), alpha=alphaval, fill=colorcodes_areas[3]) +
+  geom_rect(aes(xmin = min(inner_box_lon), xmax = max(inner_box_lon), ymin = min(inner_box_lat), ymax = max(inner_box_lat)),  color=colorcodes_areas[3], fill=NA, lwd=1.5) +
   geom_text(aes(x = min(inner_box_lon), y = max(inner_box_lat-0.04), label = "Inner"),size = txtsize, vjust = 0, hjust = 0) +
-  geom_rect(aes(xmin = min(outer_box_lon), xmax = max(outer_box_lon), ymin = min(outer_box_lat), ymax = max(outer_box_lat)), alpha=alphaval, fill=colorcodes_areas[4]) +
+  geom_rect(aes(xmin = min(outer_box_lon), xmax = max(outer_box_lon), ymin = min(outer_box_lat), ymax = max(outer_box_lat)),  color=colorcodes_areas[4], fill=NA, lwd=1.5) +
   geom_text(aes(x = mean(outer_box_lon)-0.2, y = mean(outer_box_lat), label = "Outer"),size = txtsize, vjust = 0, hjust = 0) +
-   geom_rect(aes(xmin = 10, xmax = min(outside_box_lon), ymin = min(outside_box_lat), ymax = max(outside_box_lat)), 
-             colour="black", fill=NA, linetype="dashed") +
-  #geom_hline(yintercept= outside_lat, linetype="dashed") +
+   geom_rect(aes(xmin = 10, xmax = min(outside_lon), ymin = min(outside_lat), ymax = max(outside_lat)), 
+             colour="black", fill=NA, lwd=1.5, linetype="dashed") +
   geom_text(aes(x = min(outer_box_lon)-0.1, y = outside_lat+0.01, label = "Outside"),size = txtsize, vjust = 0, hjust = 0)+
   geom_point(data=dat  %>% filter(day==1),
              aes(x = lon, y = lat), size=0.1,color="black")  +
@@ -266,8 +248,8 @@ zoomed <- maparea +
 # study_area <- overview + annotation_custom(ggplotGrob(zoomed), xmin = 15, xmax = 31, 
 #                        ymin = 58.5, ymax = 67)
 
-study_area <- zoomed + annotation_custom(ggplotGrob(overview), xmin = 17.28, xmax = 18.0, 
-                       ymin = 69.22, ymax = 69.4)
+study_area <- zoomed + annotation_custom(ggplotGrob(overview), xmin = 17.32, xmax = 18.1, 
+                       ymin = 69.23, ymax = 69.41)
 
 ggsave(study_area, file="../Figures/study_area.jpg", width = 180, height = 160, units = "mm", dpi = 300)
 
@@ -431,6 +413,123 @@ ggsave(vol_and_dist, file="../Figures/vol_and_dist.jpg", width = 180, height = 1
 # tab
 
 ```
+
+Spatial distribution of material at selected time points
+
+```{r num_particles_day, eval=FALSE}
+
+ext <- c(16.5, 22.8, 69.3, 70.1)
+
+reso <- c(0.01,0.005)
+fullRaster <- raster(resolution = reso, xmn=ext[1], xmx=ext[2], ymn=ext[3], ymx=ext[4])
+
+zlims <- c(0,9.7)
+plotlist <- list()
+
+for(year in years){
+  for(x in 1:2){
+  timespan<-paste0(year,"-1-1-1_to_",year,"-12-31-1")
+  dat <- get(paste0(runs[x],"_",timespan,"_dat")) 
+  dat_sp <- SpatialPointsDataFrame(cbind(dat$lon,dat$lat), data=dat)
+  days <- firstDayMonth(unique(dat_sp$date))[c(6,9)]
+
+  for(i in 1:length(days)){
+    dat_i <- dat_sp[dat_sp$date==days[i],]
+    # Counting the number of particles:
+    # rasterNumParts <- rasterize(x=dat_i[,"ID"], y=fullRaster, fun="count")
+    # rasterNumParts <- as.data.frame(rasterNumParts , xy=T, na.rm=T)
+    # maxval <- max(rasterNumParts$ID)
+    
+    # Summing the volume of particles:
+    rasterNumParts <- rasterize(x=dat_i[,"vol_particle"], y=fullRaster, fun="sum")
+    rasterNumParts <- as.data.frame(rasterNumParts , xy=T, na.rm=T)
+    rasterNumParts$Number <- log(rasterNumParts$vol_particle+1)
+    print(range(rasterNumParts$Number ))
+    #maxval <- max(rasterNumParts$Number)
+
+    plot_x <- maparea +
+  coord_cartesian(xlim = ext[c(1,2)], ylim = ext[c(3,4)]) + 
+  geom_raster(data = rasterNumParts, aes(x = x, y = y, fill=Number), interpolate = TRUE) +
+  scale_fill_gradientn(limits = zlims,
+                       na.value = "grey", #na.value color same as color for max value
+                       colours = c("purple","blue", "green","yellow","orange","red"),
+                       name="Number") +
+  #ggtitle(paste0(days[i], "\nMax: ", round(maxval))) +
+  theme(axis.text.x=element_blank(),axis.ticks.x=element_blank(),
+        axis.title.x=element_blank(),axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),axis.title.y=element_blank(),
+        legend.position="none",
+        plot.margin = unit(c(-2,0,-0.5,0), "lines"),
+        plot.title=element_text(vjust = -14, hjust = 0.01),
+        plot.subtitle = element_text(vjust= -14, hjust = 0.01),
+        panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+# Add label
+if(year == years[1] & x ==1 & i==1){
+  plot_x <- plot_x +
+    labs(x=NULL,y=NULL,
+         title = paste0("A. ", days[i]),
+         subtitle = run_name_short[x])}
+    else if (year == years[2] & x ==1 & i==1) {
+  plot_x <- plot_x +
+    labs(x=NULL,y=NULL,
+         title = paste0("B. ", days[i]),
+         subtitle = run_name_short[x])} 
+    else if (year == years[1] & x ==1 & i==2) {
+  plot_x <- plot_x +
+    labs(x=NULL,y=NULL,
+         title = paste0("C. ", days[i]),
+         subtitle = run_name_short[x]) } 
+    else if (year == years[2] & x ==1 & i==2) {
+  plot_x <- plot_x +
+    labs(x=NULL,y=NULL,
+         title = paste0("D. ", days[i]),
+         subtitle = run_name_short[x]) 
+} else if (year == years[1] & x ==2 & i==1) {
+  plot_x <- plot_x +
+    labs(x=NULL,y=NULL,
+         title = paste0("E. ", days[i]),
+         subtitle = run_name_short[x])
+} else if (year == years[2] & x ==2 & i==1) {
+  plot_x <- plot_x +
+  labs(x=NULL,y=NULL,
+       title = paste0("F. ",days[i]),
+       subtitle = run_name_short[x])
+  } else if (year == years[1] & x ==2 & i==2) {
+  plot_x <- plot_x +
+    labs(x=NULL,y=NULL,
+         title = paste0("G. ", days[i]),
+         subtitle = run_name_short[x])
+}  else {
+  plot_x <- plot_x +
+    labs(x=NULL,y=NULL,
+         title = paste0("H. ", days[i]),
+         subtitle = run_name_short[x]) 
+} 
+    
+
+    plotlist <- append(plotlist, list(plot_x)) 
+  } # Days
+  } # run
+} # year
+
+# Get legend
+ lastplot <- maparea  +
+    geom_raster(data = rasterNumParts, aes(x = x, y = y, fill=Number), interpolate = TRUE) +
+    scale_fill_gradientn(limits = zlims,
+                         na.value = "grey", #na.value color same as color for max value
+                         colours = c("purple","blue", "green","yellow","orange","red"), name="log(Volume)") +
+    theme(legend.direction = "horizontal", legend.key.height = unit(0.2, 'cm')) 
+
+  legend <- cowplot::get_legend(lastplot)
+  plotlist <- append(plotlist, list(legend))
+ 
+
+daily_dist <- grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:4,NA,5:9),ncol=2,byrow=FALSE), heights = c(rep(1,4),0.3))
+ggsave(daily_dist, file="../Figures/daily_dist.jpg", width = 180, height = 200, units = "mm", dpi = 300)
+
+```
+
 
 Residence time per box (Difference between first and last time within box) and time to reach area, plotted per release month and run.
 
@@ -599,8 +698,7 @@ transport <- transport %>%
 
 newdat_firstday <- data.frame(transport_movavg=seq(min(transport$transport_movavg, na.rm=T),max(transport$transport_movavg, na.rm=T),length.out=100), region=rep(c("adjacent","inner","outer","outside"),each=100)) %>%
   mutate(region = factor(region, levels =c("adjacent","inner","outer","outside")))
-    
-
+  
 newdat_residence <- data.frame(transport_movavg=seq(min(transport$transport_movavg, na.rm=T),max(transport$transport_movavg, na.rm=T),length.out=100), region=rep(c("local","adjacent","inner","outer","outside"),each=100)) %>%
   mutate(region = factor(region, levels =c("local","adjacent","inner","outer","outside")))
 
@@ -608,14 +706,15 @@ txtsize <- 8
 
 plotlist <- list()
 
-for(year in years){
-  timespan<-paste0(year,"-1-1-1_to_",year,"-12-31-1")
-  for(x in 1:2){
-    dat <- get(paste0(runs[x],"_",timespan,"_dat"))  %>% 
-      mutate(release_date = as.Date(release_date))
+for(x in 1:2){
+    print(x)
+  # Combine data for the two years)
+  df_list <- mget(ls(pattern = runs[x]))
+  dat <- bind_rows(df_list) %>% 
+    mutate(release_date = as.Date(release_date))
 
-    # Find time to reach box
-    for(i in c("adjacent","inner","outer")){
+# Find time to reach box
+  for(i in c("adjacent","inner","outer")){
       lon_i <- get(paste0(i,"_box_lon"))
       lat_i <- get(paste0(i,"_box_lat"))
       
@@ -643,42 +742,44 @@ for(year in years){
                            firstday_outer, firstday_outside)  %>%
       mutate(region = factor(region, levels =c("adjacent","inner","outer","outside")))
     
+    
+    
     mod_firstday <- gam(firstday ~ s(transport_movavg, by=region, k = 4) + region, data = firstday_all)
-    newdat_firstday$firstday <- predict.gam(mod_firstday, newdata = newdat_firstday) 
+    
+    print(summary(mod_firstday))
+    predictions <- predict.gam(mod_firstday, newdata = newdat_firstday, se.fit = TRUE) 
+    
+    newdat_firstday <- newdat_firstday  %>%
+        mutate(firstday = predictions$fit, 
+               se = predictions$se.fit,
+               lower = firstday - 1.96 * se,
+               upper = firstday + 1.96 * se)
     
     plot_x <- ggplot(data = newdat_firstday, aes(x=transport_movavg, y = firstday, color=region)) +
       geom_line() +
       scale_color_manual(values=colorcodes_areas[-1]) + 
+      geom_ribbon(data = newdat_firstday, aes(ymin = lower, ymax = upper, fill=region), colour = NA, alpha = 0.2) +
+      scale_fill_manual(values=colorcodes_areas[-1]) + 
       ylim(c(0,60)) + 
       ylab("") +
       theme_classic() + theme(legend.position = "null",
-                          axis.title.x=element_blank())
+                          axis.title.x=element_blank()) +
+      geom_vline(xintercept = max(firstday_all$transport_movavg[firstday_all$release_date>"2018-12-31"])) +
+      geom_vline(xintercept = max(firstday_all$transport_movavg[firstday_all$release_date<"2018-12-31"]), linetype=2) 
 
-    # Asterix if significant
-    # if(summary(mod_firstday)$s.table[4]<0.05){
-    #   ast <- "*"
-    # } else { ast <- ""}
-    
-    # Ylab first year
-    if(year == years[1]){
+    # Ylab first plot
+    if(x ==1){
       plot_x <- plot_x +
-        ylab("Time to reach")
-    }
+        ylab("Time to reach")}
    
      # Add label
-    if(year == years[1] & x ==1){
+    if(x ==1){
        plot_x <- plot_x +
-           ggtitle(label=paste0("A. ",year), subtitle = paste0(run_name_short[x],ast))
-             } else if (year == years[2] & x ==1) {
+           ggtitle(label="A.", subtitle = run_name_short[x])
+             } else {
         plot_x <- plot_x +
-           ggtitle(label=paste0("B. ",year), subtitle = paste0(run_name_short[x],ast))
-        } else if (year == years[1] & x ==2) {
-        plot_x <- plot_x +
-       ggtitle(paste0("E. ",year), subtitle = paste0(run_name_short[x],ast))
-     }  else {
-      plot_x <- plot_x +
-       ggtitle(paste0("F. ",year), subtitle = paste0(run_name_short[x],ast))
-     } 
+           ggtitle(label="B.", subtitle = run_name_short[x])
+        } 
     
     plotlist <- append(plotlist, list(plot_x))
 
@@ -713,59 +814,55 @@ for(year in years){
       mutate(region = factor(region, levels =c("local","adjacent","inner","outer","outside")))
     
     mod_residence <- gam(residence ~ s(transport_movavg, by=region, k = 4) + region, data = residence_all)
+    print(summary(mod_residence))
+
+    predictions <- predict.gam(mod_residence, newdata = newdat_residence, se.fit = TRUE) 
+
+    newdat_residence <- newdat_residence  %>%
+        mutate(residence= predictions$fit, 
+               se = predictions$se.fit,
+               lower = residence - 1.96 * se,
+               upper = residence + 1.96 * se)    
     
-    newdat_residence$residence <- predict.gam(mod_residence, newdata = newdat_residence) 
-    
-    # Asterix if significant
-    # if(summary(mod_residence)$s.table[4]<0.05){
-    #   ast <- "*"
-    # } else { ast <- ""}
     
     plot_x <- ggplot(data = newdat_residence, aes(x=transport_movavg, y = residence, color=region)) +
       geom_line() +
       scale_color_manual(values=colorcodes_areas) + 
       ylim(0,90) + 
       ylab("") +
+      geom_ribbon(data = newdat_residence, aes(ymin = lower, ymax = upper, fill=region), colour = NA, alpha = 0.2) +
+      scale_fill_manual(values=colorcodes_areas) + 
+      ylab("") +
       theme_classic() + theme(legend.position = "null",
-                          axis.title.x=element_blank())
-    # Ylab to first year  
-    if(year == years[1]){
+                          axis.title.x=element_blank()) +
+      geom_vline(xintercept = max(residence_all$transport_movavg[residence_all$release_date>"2018-12-31"])) +
+      geom_vline(xintercept = max(residence_all$transport_movavg[residence_all$release_date<"2018-12-31"]), linetype=2) 
+    
+    # Ylab to first run  
+    if(x == 1){
       plot_x <- plot_x +
         ylab("Residence time")
     }
     
-      # Add label
-    if(year == years[1] & x ==1){
+      # Add label / legend
+   if(x ==1){
        plot_x <- plot_x +
-           ggtitle(label=paste0("C. ",year), subtitle = paste0(run_name_short[x],ast))
-             } else if (year == years[2] & x ==1) {
+           ggtitle(label="C.", subtitle = run_name_short[x])
+             } else {
         plot_x <- plot_x +
-           ggtitle(label=paste0("D. ",year), subtitle = paste0(run_name_short[x],ast))
-        } else if (year == years[1] & x ==2) {
-        plot_x <- plot_x +
-       ggtitle(paste0("G. ",year), subtitle = paste0(run_name_short[x],ast))
-     }  else {
-      plot_x <- plot_x +
-       ggtitle(paste0("H. ",year), subtitle = paste0(run_name_short[x],ast))
-     } 
+           ggtitle(label="D.", subtitle = run_name_short[x]) +
+             theme(legend.position = c(.45, 0.95), legend.title = element_blank(), 
+              legend.text = element_text(size = txtsize), legend.direction = "horizontal", legend.key.size = unit(0.6, 'cm')) 
 
-    # Legend to last plot
-    if(year == years[2] & x == 2){
-      plot_x <- plot_x +
-        theme(legend.position = c(.45, -0.22), legend.title = element_blank(), 
-              legend.text = element_text(size = txtsize), legend.direction = "horizontal", legend.key.size = unit(0.6, 'cm')) }
+        }
     
-  
      plotlist <- append(plotlist, list(plot_x))
       rm(list=ls(pattern="residence_"))
   } # Run
-} # Year
 
-time_and_residence_mods <- grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:8),ncol=2,byrow=FALSE), bottom=textGrob("Volume flux (log(m3/day))"))
+time_and_residence_mods <- grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:4),ncol=2,byrow=FALSE), bottom=textGrob("Volume flux (log(m3/day))"))
 
-ggsave(time_and_residence_mods, file="../Figures/time_and_residence_mods.jpg", width = 180, height = 200, units = "mm", dpi = 300)
-
-
+ggsave(time_and_residence_mods, file="../Figures/time_and_residence_mods.jpg", width = 220, height = 160, units = "mm", dpi = 300)
 
 ```
 
@@ -985,83 +1082,6 @@ grid.arrange(grobs = plotlist, layout_matrix = matrix(c(1:8),nrow=2,byrow=FALSE)
 
 ```
   
-Comparing the distribution of material originating from the river at the first day of every 2nd month during the simulation, the highest concentrations of river material is found in the inner fjord system from July and onward (`r figs("num_particles_day", display = "cite")`), corresponding to the period after the strongest river volume flow (`r figs("particle_release", display = "cite")`). The river water transport before May was stronger in 2019 compared to 2018 (`r figs("particle_release", display = "cite")`), which is reflected in higher concentrations of river material in the inner system in this year in May  (`r figs("num_particles_day", display = "cite")`).  *This figure could be moved to the supplementary material and potentially replaced by an animation.*  
-
-```{r num_particles_day, eval=FALSE}
-
-# `r figs("num_particles_day", display = "cite")` shows the distribution of water at the first day of each month of the simulation. *This figure could be moved to the supplementary material and potentially replaced by an animation.*  
-
-plotlist <- list()
-zlims <- c(0,7.4)
-
-for(x in 1:3){
-  for(year in years){
-  timespan<-paste0(year,"-2-1-1_to_",year,"-12-31-1")
-  run_name <- paste0(runs[x],"_",timespan)
-  dat <- get(paste0(run_name,"_dat"))
-  dat_sp <- SpatialPointsDataFrame(cbind(dat$lon,dat$lat), data=dat)
-  days <- firstDayMonth(unique(dat_sp$date))[c(3,5,7,9)]
-
-  for(i in 1:length(days)){
-    dat_i <- dat_sp[dat_sp$date==days[i],]
-    # Counting the number of particles:
-    # rasterNumParts <- rasterize(x=dat_i[,"ID"], y=fullRaster, fun="count")
-    # rasterNumParts <- as.data.frame(rasterNumParts , xy=T, na.rm=T)
-    # maxval <- max(rasterNumParts$ID)
-    
-    # Summing the volume of particles:
-    rasterNumParts <- rasterize(x=dat_i[,"vol_particle"], y=fullRaster, fun="sum")
-    rasterNumParts <- as.data.frame(rasterNumParts , xy=T, na.rm=T)
-    rasterNumParts$Number <- log(rasterNumParts$vol_particle+1)
-    #maxval <- max(rasterNumParts$Number)
-
-    dayplot <- maparea_all +
-      coord_cartesian(xlim = c(17.4, 19.25), ylim = c(69.25, 69.7)) + 
-      geom_raster(data = rasterNumParts, aes(x = x, y = y, fill=Number), interpolate = TRUE) +
-    scale_fill_gradientn(limits = zlims,
-                         na.value = "red", #na.value color same as color for max value
-                         colours = c("purple","blue", "green","yellow","orange","red"),
-                         name="Number") +
-    #ggtitle(paste0(days[i], "\nMax: ", round(maxval))) +
-    ggtitle(days[i]) +
-    theme(axis.text.x=element_blank(),
-          axis.ticks.x=element_blank(),
-          axis.title.x=element_blank(),
-          axis.text.y=element_blank(),
-          axis.ticks.y=element_blank(),
-          axis.title.y=element_blank(),
-          legend.position="none",
-          plot.margin = unit(c(-2,0,-0.5,0), "lines"),
-          plot.title=element_text(face="bold", margin=margin(t=40,b=-20)),
-          panel.border = element_rect(colour = "black", fill=NA, size=1))
-    
-    if(i == 1 & year == 2018){
-      dayplot <- dayplot +
-           labs(subtitle = run_name_short[x]) + 
-        theme(plot.title = element_text(vjust = -3),
-              plot.subtitle = element_text(face = "bold", hjust = 0.5))}
-
-
-    plotlist <- append(plotlist, list(dayplot)) 
-  } # Days
-  } # Year
-} # Run
-
-# Get legend
- lastplot <- maparea_all  +
-    geom_raster(data = rasterNumParts, aes(x = x, y = y, fill=Number), interpolate = TRUE) +
-    scale_fill_gradientn(limits = zlims,
-                         na.value = "red", #na.value color same as color for max value
-                         colours = c("purple","blue", "green","yellow","orange","red"), name="log(Volume)") +
-    theme(legend.direction = "horizontal") 
-
-  legend <- cowplot::get_legend(lastplot)
-  plotlist <- append(plotlist, list(legend))
- 
-
-grid.arrange(grobs=plotlist, layout_matrix = matrix(c(1:8,NA,9:16,25,17:24,NA),ncol=3,byrow=FALSE), heights = c(rep(1,8),0.5))
-
-```
 
  
 ```{r age_particles_day, eval=FALSE}
