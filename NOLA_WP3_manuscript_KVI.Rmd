@@ -705,9 +705,11 @@ newdat_residence <- data.frame(transport_movavg=seq(min(transport$transport_mova
 txtsize <- 8
 
 plotlist <- list()
+variable_names <- c("Particle","Model","DevExpl","local","adjacent","inner","outer","outside")
+summarytab <- data.frame(Particle = rep(run_name_short,each=2), Model = rep(c("TimeToReach","ResidenceTime"),2),
+                         DevExpl=NA,local=NA,adjacent=NA,inner=NA,outer=NA,outside=NA)
 
 for(x in 1:2){
-    print(x)
   # Combine data for the two years)
   df_list <- mget(ls(pattern = runs[x]))
   dat <- bind_rows(df_list) %>% 
@@ -742,11 +744,18 @@ for(x in 1:2){
                            firstday_outer, firstday_outside)  %>%
       mutate(region = factor(region, levels =c("adjacent","inner","outer","outside")))
     
-    
-    
     mod_firstday <- gam(firstday ~ s(transport_movavg, by=region, k = 4) + region, data = firstday_all)
-    
+    # mod_firstday <- gam(firstday ~ s(transport_movavg, k = 4) + s(transport_movavg, by=region, k = 4) + region, data = firstday_all)
+    print(paste0("Time to reach ", run_name_short[x]))
     print(summary(mod_firstday))
+    
+    # Get model summary 
+    devExpl <- round(summary(mod_firstday)$dev.expl, 2)
+    pvals <- unname(summary(mod_firstday)$s.table[,4])
+    pvals <- round(pvals,2)
+    pvals[pvals<0.05] <- "<0.05"
+    summarytab[summarytab$Particle == run_name_short[x] & summarytab$Model=="TimeToReach",-c(1:2)] <-  c(devExpl,NA,pvals)
+   
     predictions <- predict.gam(mod_firstday, newdata = newdat_firstday, se.fit = TRUE) 
     
     newdat_firstday <- newdat_firstday  %>%
@@ -814,8 +823,18 @@ for(x in 1:2){
       mutate(region = factor(region, levels =c("local","adjacent","inner","outer","outside")))
     
     mod_residence <- gam(residence ~ s(transport_movavg, by=region, k = 4) + region, data = residence_all)
+    # mod_residence <- gam(residence ~  s(transport_movavg, k = 4) + s(transport_movavg, by=region, k = 4) + region, data = residence_all)
+    
+    print(paste0("Residence time ", run_name_short[x]))
     print(summary(mod_residence))
-
+    
+    # Get model summary 
+    devExpl <- round(summary(mod_residence)$dev.expl, 2)
+    pvals <- unname(summary(mod_residence)$s.table[,4])
+    pvals <- round(pvals,2)
+    pvals[pvals<0.05] <- "<0.05"
+    summarytab[summarytab$Particle == run_name_short[x] & summarytab$Model=="ResidenceTime",-c(1:2)] <-  c(devExpl,pvals)
+  
     predictions <- predict.gam(mod_residence, newdata = newdat_residence, se.fit = TRUE) 
 
     newdat_residence <- newdat_residence  %>%
